@@ -1,11 +1,22 @@
 <script setup></script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+<div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="rail">
+        <div class="rail-logo">W</div>
+
+        <div class="rail-icons">
+            <router-link to="/">Spaces</router-link>
+            <router-link to="/goals">Goals</router-link>
+            <div class="rail-icon"></div>
+            <div class="rail-icon"></div>
+            <div class="rail-icon"></div>
+        </div>
+    </aside>
+
+    <RouterView />
+</div>
 </template>
 
 <style scoped></style>
