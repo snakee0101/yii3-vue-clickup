@@ -1,7 +1,11 @@
 <script setup></script>
 
 <template>
-    <slot></slot>
+<div class="layout">
+    <div class="auth-card auth-container">
+        <slot></slot>
+    </div>
+</div>
 </template>
 
 <style scoped></style>

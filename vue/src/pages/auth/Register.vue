@@ -1,8 +1,7 @@
 <script setup></script>
 
 <template>
-<div class="layout">
-    <div class="auth-card auth-container">
+    <auth-layout>
         <h1>Register</h1>
 
         <form>
@@ -15,8 +14,7 @@
                 <router-link to="/login">Click here to login</router-link>
             </div>
         </form>
-    </div>
-</div>
+    </auth-layout>
 </template>
 
 <style scoped></style>
