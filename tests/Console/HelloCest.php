@@ -6,7 +6,7 @@ namespace App\Tests\Console;
 
 use App\Tests\Support\ConsoleTester;
 
-final readonly class HelloCommandCest
+final readonly class HelloCest
 {
     public function base(ConsoleTester $I): void
     {

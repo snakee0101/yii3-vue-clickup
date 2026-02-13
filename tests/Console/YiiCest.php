@@ -6,7 +6,7 @@ namespace App\Tests\Console;
 
 use App\Tests\Support\ConsoleTester;
 
-final readonly class YiiCest
+final class YiiCest
 {
     public function base(ConsoleTester $I): void
     {

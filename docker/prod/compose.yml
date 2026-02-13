@@ -8,8 +8,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     env_file:
-      - path: ./dev/.env
-      - path: ./dev/override.env
+      - path: ./prod/.env
+      - path: ./prod/override.env
         required: false
     deploy:
       replicas: 2
@@ -28,7 +28,7 @@ services:
         max_attempts: 3
         window: 120s
       labels:
-        caddy: ${PROD_HOST:-app-api.example.com}
+        caddy: ${PROD_HOST:-app.example.com}
         caddy.reverse_proxy: "{{upstreams 80}}"
 
 volumes:

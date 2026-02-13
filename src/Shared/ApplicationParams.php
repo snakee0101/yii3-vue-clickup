@@ -8,6 +8,7 @@ final readonly class ApplicationParams
 {
     public function __construct(
         public string $name = 'My Project',
-        public string $version = '1.0',
+        public string $charset = 'UTF-8',
+        public string $locale = 'en',
     ) {}
 }

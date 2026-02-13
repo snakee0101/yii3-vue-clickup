@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Environment;
 use Psr\Log\LogLevel;
 use Yiisoft\ErrorHandler\ErrorHandler;
-use Yiisoft\ErrorHandler\Renderer\JsonRenderer;
+use Yiisoft\ErrorHandler\Renderer\HtmlRenderer;
 use Yiisoft\Log\Logger;
 use Yiisoft\Log\Target\File\FileTarget;
 use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
@@ -53,7 +53,7 @@ $runner = new HttpApplicationRunner(
                 ]),
             ],
         ),
-        new JsonRenderer(),
+        new HtmlRenderer(),
     ),
 );
 $runner->run();

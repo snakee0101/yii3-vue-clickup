@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Tests\Support;
 
 use App\Environment;
-use Codeception\Actor;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
@@ -28,7 +27,7 @@ use function dirname;
  *
  * @SuppressWarnings(PHPMD)
 */
-class FunctionalTester extends Actor
+class FunctionalTester extends \Codeception\Actor
 {
     use _generated\FunctionalTesterActions;
 

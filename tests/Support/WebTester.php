@@ -19,9 +19,9 @@ namespace App\Tests\Support;
  *
  * @SuppressWarnings(PHPMD)
 */
-class ApiTester extends \Codeception\Actor
+class WebTester extends \Codeception\Actor
 {
-    use _generated\ApiTesterActions;
+    use _generated\WebTesterActions;
 
     /**
      * Define custom actions here

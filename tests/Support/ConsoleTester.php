@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Support;
 
+use function dirname;
+
 /**
  * Inherited Methods
  * @method void wantTo($text)
@@ -18,7 +20,7 @@ namespace App\Tests\Support;
  * @method void pause($vars = [])
  *
  * @SuppressWarnings(PHPMD)
-*/
+ */
 class ConsoleTester extends \Codeception\Actor
 {
     use _generated\ConsoleTesterActions;

@@ -10,7 +10,8 @@ return [
     ApplicationParams::class => [
         '__construct()' => [
             'name' => $params['application']['name'],
-            'version' => $params['application']['version'],
+            'charset' => $params['application']['charset'],
+            'locale' => $params['application']['locale'],
         ],
     ],
 ];

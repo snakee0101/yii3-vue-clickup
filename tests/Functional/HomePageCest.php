@@ -7,10 +7,10 @@ namespace App\Tests\Functional;
 use App\Tests\Support\FunctionalTester;
 use HttpSoft\Message\ServerRequest;
 
-use function PHPUnit\Framework\assertJson;
 use function PHPUnit\Framework\assertSame;
+use function PHPUnit\Framework\assertStringContainsString;
 
-final readonly class HomePageCest
+final class HomePageCest
 {
     public function base(FunctionalTester $tester): void
     {
@@ -18,15 +18,10 @@ final readonly class HomePageCest
             new ServerRequest(uri: '/'),
         );
 
-        $output = $response->getBody()->getContents();
-        assertJson($output);
-
-        assertSame(
-            [
-                'status' => 'success',
-                'data' => ['name' => 'My Project', 'version' => '1.0'],
-            ],
-            json_decode($output, true),
+        assertSame(200, $response->getStatusCode());
+        assertStringContainsString(
+            'Don\'t forget to check the guide',
+            $response->getBody()->getContents(),
         );
     }
 }

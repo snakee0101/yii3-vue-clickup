@@ -7,6 +7,8 @@ namespace App\Tests\Unit;
 use App\Environment;
 use Codeception\Test\Unit;
 
+use function PHPUnit\Framework\assertSame;
+
 final class EnvironmentTest extends Unit
 {
     protected function _before(): void
@@ -16,6 +18,6 @@ final class EnvironmentTest extends Unit
 
     public function testAppEnv(): void
     {
-        $this->assertSame('test', Environment::appEnv());
+        assertSame('test', Environment::appEnv());
     }
 }

@@ -26,15 +26,19 @@ return [
         'di-delegates-console' => '$di-delegates',
         'di-delegates-web' => '$di-delegates',
         'di-providers' => [],
-        'di-providers-console' => '$di-providers',
-        'di-providers-web' => '$di-providers',
+        'di-providers-web' => [
+            '$di-providers',
+        ],
+        'di-providers-console' => [
+            '$di-providers',
+        ],
         'events' => [],
-        'events-console' => '$events',
-        'events-web' => '$events',
-        'bootstrap' => [],
-        'bootstrap-console' => '$bootstrap',
-        'bootstrap-web' => '$bootstrap',
+        'events-web' => ['$events'],
+        'events-console' => ['$events'],
         'routes' => 'common/routes.php',
+        'bootstrap' => 'common/bootstrap.php',
+        'bootstrap-web' => '$bootstrap',
+        'bootstrap-console' => '$bootstrap',
     ],
     'config-plugin-environments' => [
         Environment::DEV => [

@@ -1,4 +1,4 @@
-actor: ApiTester
+actor: WebTester
 extensions:
   enabled:
     - Codeception\Extension\RunProcess:
@@ -6,6 +6,5 @@ extensions:
         sleep: 3
 modules:
   enabled:
-    - REST:
+    - PhpBrowser:
         url: http://127.0.0.1:8080
-        depends: PhpBrowser

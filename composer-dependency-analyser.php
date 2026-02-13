@@ -14,11 +14,8 @@ return (new Configuration())
     ->addPathToScan($root . '/public/index.php', isDev: false)
     ->addPathToScan($root . '/yii', isDev: false)
     ->addPathToScan($root . '/tests', isDev: true)
-    ->ignoreErrorsOnPackages(
-        ['yiisoft/di', 'yiisoft/data'],
-        [ErrorType::PROD_DEPENDENCY_ONLY_IN_DEV],
-    )
-    ->ignoreErrorsOnPackages(
-        ['psr/container', 'yiisoft/config', 'yiisoft/aliases', 'yiisoft/request-provider', 'yiisoft/router-fastroute'],
-        [ErrorType::UNUSED_DEPENDENCY],
-    );
+    ->ignoreErrorsOnPackage('psr/container', [ErrorType::UNUSED_DEPENDENCY])
+    ->ignoreErrorsOnPackage('yiisoft/config', [ErrorType::UNUSED_DEPENDENCY])
+    ->ignoreErrorsOnPackage('yiisoft/di', [ErrorType::UNUSED_DEPENDENCY])
+    ->ignoreErrorsOnPackage('yiisoft/view', [ErrorType::UNUSED_DEPENDENCY])
+    ->ignoreErrorsOnPackage('yiisoft/router-fastroute', [ErrorType::UNUSED_DEPENDENCY]);
