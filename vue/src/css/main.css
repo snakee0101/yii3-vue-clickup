@@ -219,9 +219,9 @@ body {
     text-align: center;
 }
 
-.auth-container .auth-card h1 {
-    font-size: 24px;
-    margin-bottom: 30px;
+.auth-container h1 {
+    font-size: 26px;
+    margin-bottom: 20px;
     font-weight: 600;
     color: #222;
 }

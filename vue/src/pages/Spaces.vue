@@ -1,7 +1,7 @@
 <script setup></script>
 
 <template>
-<div>
+<default-layout>
     <!-- WHITE SIDEBAR -->
     <aside class="sidebar">
         <div class="sidebar-section">
@@ -119,7 +119,7 @@
 
         </div>
     </div>
-</div>
+</default-layout>
 </template>
 
 <style scoped></style>
