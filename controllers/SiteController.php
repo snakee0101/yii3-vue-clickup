@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\User;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
@@ -123,6 +124,12 @@ class SiteController extends Controller
      */
     public function actionAbout()
     {
-        return $this->render('about');
+        return var_dump(User::findByAccessToken('fgsfgsg'));
+        /*return var_dump((new \yii\db\Query())
+            ->select('*')
+            ->from('users')
+            ->limit(10)
+            ->all());*/
+        //return $this->render('about');
     }
 }

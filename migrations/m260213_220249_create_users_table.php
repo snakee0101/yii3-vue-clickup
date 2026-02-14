@@ -16,7 +16,8 @@ class m260213_220249_create_users_table extends Migration
             'id' => $this->primaryKey(),
             'name' => $this->string(255)->notNull(),
             'email' => $this->string(255)->notNull()->unique(),
-            'password' => $this->string(255)->notNull(),
+            'password_hash' => $this->string(255)->notNull(),
+            'access_token' => $this->string(255),
         ]);
     }
 
