@@ -35,8 +35,18 @@ class UserController extends Controller
         return ['errors' => null];
     }
 
-    public function actionLogin($email, $password)
+    public function actionLogin()
     {
+        $model = new \app\models\LoginForm();
+        $model->email = Yii::$app->request->post('email');
+        $model->password = Yii::$app->request->post('password');
 
+        if ($model->validate() === false) {
+            Yii::$app->response->statusCode = 422;
+
+            return ['errors' => $model->errors];
+        }
+
+        return $model->login();
     }
 }
