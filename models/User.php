@@ -5,7 +5,7 @@ namespace app\models;
 use Yii;
 use yii\db\ActiveRecord;
 
-class User extends ActiveRecord
+class User extends ActiveRecord implements \yii\web\IdentityInterface
 {
     public static function tableName()
     {
@@ -17,13 +17,33 @@ class User extends ActiveRecord
         return self::find()->where(['email' => $email])->one();
     }
 
-    public static function findByAccessToken($accessToken)
+    public function validatePassword($password)
+    {
+        return Yii::$app->getSecurity()->validatePassword($password, $this->password_hash);
+    }
+
+    public static function findIdentity($id)
+    {
+        return self::find()->where(['id' => $id])->one();
+    }
+
+    public static function findIdentityByAccessToken($token, $type = null)
     {
         return self::find()->where(['access_token' => $accessToken])->one();
     }
 
-    public function validatePassword($password)
+    public function getId()
     {
-        return Yii::$app->getSecurity()->validatePassword($password, $this->password_hash);
+        return $this->id;
+    }
+
+    public function getAuthKey()
+    {
+        return $this->access_token;
+    }
+
+    public function validateAuthKey($authKey)
+    {
+        return $authKey == $this->getAuthKey();
     }
 }
