@@ -29,7 +29,7 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
 
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        return self::find()->where(['access_token' => $accessToken])->one();
+        return self::find()->where(['access_token' => $token])->one();
     }
 
     public function getId()
