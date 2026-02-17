@@ -38,7 +38,7 @@ class UserController extends Controller
         //Login this user immediately
         Yii::$app->user->login($user, duration: 3600 * 24 * 30);
 
-        return ['errors' => null];
+        return $user;
     }
 
     public function actionLogin()
