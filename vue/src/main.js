@@ -6,6 +6,13 @@ import router from "./router"
 import AuthLayout from './pages/layouts/AuthLayout.vue'
 import DefaultLayout from './pages/layouts/DefaultLayout.vue'
 
+import axios from 'axios'
+if(localStorage.getItem('access_token') !== null) {
+    axios.defaults.headers.common['Content-Type'] = 'application/json';
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('access_token');
+}
+window.axios = axios;
+
 const app = createApp(App)
 
 app.use(createPinia())

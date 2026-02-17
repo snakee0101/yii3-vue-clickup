@@ -4,10 +4,16 @@ namespace app\controllers;
 
 use app\models\User;
 use Yii;
+use yii\filters\Cors;
 use yii\rest\Controller;
 
 class UserController extends Controller
 {
+    public function behaviors()
+    {
+        return [...parent::behaviors(), Cors::class];
+    }
+
     public function actionRegister()
     {
         $model = new \app\models\RegisterForm(); //Model is in fact a validator (not an ActiveRecord that saves data to DB)

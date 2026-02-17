@@ -1,4 +1,10 @@
-<script setup></script>
+<script setup>
+
+function testAxios() {
+  axios.get('/api/test');
+}
+
+</script>
 
 <template>
 <default-layout>
@@ -44,7 +50,7 @@
 
             <div class="top-right">
                 <input class="search" placeholder="Search Ctrl K" />
-                <button class="btn-task">+ Task</button>
+                <button class="btn-task" @click="testAxios">+ Task</button>
             </div>
         </header>
 
