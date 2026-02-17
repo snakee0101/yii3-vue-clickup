@@ -1,4 +1,11 @@
-<script setup></script>
+<script setup>
+
+function logout() {
+  localStorage.removeItem('access_token');
+  window.location = '/login';
+}
+
+</script>
 
 <template>
 <div class="layout">
@@ -12,6 +19,10 @@
             <div class="rail-icon"></div>
             <div class="rail-icon"></div>
             <div class="rail-icon"></div>
+        </div>
+
+        <div class="logout">
+          <a href="#" @click.prevent="logout">Logout</a>
         </div>
     </aside>
 

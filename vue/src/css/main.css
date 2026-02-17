@@ -51,6 +51,11 @@ body {
     background: white;
 }
 
+.logout {
+    margin-top: auto;
+    margin-bottom: 20px;
+}
+
 /* SIDEBAR */
 .sidebar {
     width: 260px;
