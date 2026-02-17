@@ -7,9 +7,15 @@ import AuthLayout from './pages/layouts/AuthLayout.vue'
 import DefaultLayout from './pages/layouts/DefaultLayout.vue'
 
 //PrimeVue
+//Primevue docs - https://primevue.org/listbox/
 import PrimeVue from 'primevue/config';
 import Aura from '@primeuix/themes/aura';
 import Button from "primevue/button";
+
+//Unicons icons docs: https://iconscout.com/unicons/thin-line-icons/plus,  https://github.com/antonreshetov/vue-unicons
+//example of styling: <unicon name="plus" fill="#ffffff" stroke="#ffffff"></unicon>
+import Unicon from 'vue-unicons';
+import { uniPlus } from 'vue-unicons/dist/icons.js'
 
 //axios settings
 import axios from 'axios'
@@ -36,5 +42,12 @@ app.component('auth-layout', AuthLayout)
 
 //PrimeVue
 app.component('Button', Button);
+
+//Unicons
+Unicon.add([uniPlus]);
+app.use(Unicon,{
+    height: 16,
+    width: 16
+});
 
 app.mount('#app')
