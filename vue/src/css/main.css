@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import "tailwindcss-primeui";
+@import 'primeicons/primeicons.css';
 
 :root {
     --p-button-padding-y: 0.2rem!important;

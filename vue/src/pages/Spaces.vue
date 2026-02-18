@@ -27,6 +27,28 @@ function createSpace() {
       });
 }
 
+//load spaces
+let spaces = reactive([]);
+let selectedTreeItem = ref({});
+
+axios.get('http://localhost:8081/spaces')
+.then((response) => {
+  response.data.forEach(space => {
+    spaces.push({
+      key: space.id.toString(), // unique id (required)
+      label: space.name,        // text displayed
+      icon: 'pi pi-globe',
+      data: {                   // optional custom data
+        description: space.description,
+        type: 'space'
+      },
+      children: []              //there will be folders
+    });
+  });
+});
+
+//load folders
+
 </script>
 
 <template>
@@ -68,9 +90,7 @@ function createSpace() {
               <p class="grow">Spaces</p>
               <Button @click="createSpaceDialogVisible = true"><unicon name="plus" fill="#fff"></unicon></Button>
             </div>
-            <div class="sidebar-item active">Expense tracker</div>
-            <div class="sidebar-item">basic features</div>
-            <div class="sidebar-item">News</div>
+            <Tree v-model:selectionKeys="selectedTreeItem" :value="spaces" selectionMode="single" class="w-full p-0!"></Tree>
         </div>
     </aside>
 

@@ -28,6 +28,6 @@ class m260216_220139_create_spaces_table extends Migration
     public function safeDown()
     {
         $this->dropForeignKey('fk-spaces-user_id', 'spaces');
-        $this->dropTable('{{%spaces}}');
+        $this->dropTable('spaces');
     }
 }
