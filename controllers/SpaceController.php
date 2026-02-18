@@ -3,8 +3,10 @@
 namespace app\controllers;
 
 use app\models\Space;
+use app\models\SpaceForm;
 use Yii;
 use yii\filters\auth\HttpBearerAuth;
+use yii\filters\Cors;
 use yii\rest\ActiveController;
 
 class SpaceController extends ActiveController
@@ -13,18 +15,29 @@ class SpaceController extends ActiveController
 
     public function behaviors()
     {
-        $behaviours = parent::behaviors();
-        $behaviours['authenticator']['authMethods'] = [HttpBearerAuth::class];
-        //automatically resolves Bearer token (Header "Authorization" with contents "Bearer your-token") to User model that contains this token in "access_token" column,
-        //and automatically authenticates that user so that it is accessible in Yii::$app->user->id variable
+        $behaviors = parent::behaviors();
 
-        return $behaviours;
+        // remove default authenticator
+        unset($behaviors['authenticator']);
+
+        // CORS first
+        $behaviors['corsFilter'] = [
+            'class' => \yii\filters\Cors::class,
+        ];
+
+        // add authenticator back correctly
+        $behaviors['authenticator'] = [
+            'class' => \yii\filters\auth\HttpBearerAuth::class,
+            'except' => ['options'], // allow preflight
+        ];
+
+        return $behaviors;
     }
 
     public function actions()
     {
         $actions = parent::actions();
-        unset($actions['index']);   //delete default index action handler (which just returns every Space which we dont want) and redefine my own handler
+        unset($actions['index'], $actions['create']);   //delete default index action handler (which just returns every Space which we dont want) and redefine my own handler
         return $actions;
     }
 
@@ -32,5 +45,28 @@ class SpaceController extends ActiveController
     public function actionIndex()
     {
         return Space::find()->where(['user_id' => Yii::$app->user->id])->all();
+    }
+
+    public function actionCreate()
+    {
+        ['name' => $name, 'description' => $description] = Yii::$app->request->post();
+
+        $model = new SpaceForm();
+        $model->name = $name;
+
+        if ($model->validate() === false) {
+            Yii::$app->response->statusCode = 422;
+
+            return ['errors' => $model->errors];
+        }
+
+        //This IS ActiveRecord model that saves data to DB
+        $space = new Space();
+        $space->name = $name;
+        $space->description = $description;
+        $space->user_id = Yii::$app->user->id;
+        $space->save();
+
+        return $space;
     }
 }

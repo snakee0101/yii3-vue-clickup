@@ -11,6 +11,10 @@ import DefaultLayout from './pages/layouts/DefaultLayout.vue'
 import PrimeVue from 'primevue/config';
 import Aura from '@primeuix/themes/aura';
 import Button from "primevue/button";
+import InputText from "primevue/inputtext";
+import Dialog from 'primevue/dialog';
+import Toast from 'primevue/toast';
+import ToastService from 'primevue/toastservice';
 
 //Unicons icons docs: https://iconscout.com/unicons/thin-line-icons/plus,  https://github.com/antonreshetov/vue-unicons
 //example of styling: <unicon name="plus" fill="#ffffff" stroke="#ffffff"></unicon>
@@ -35,6 +39,7 @@ app.use(createPinia())
            preset: Aura
        }
    })
+    .use(ToastService)
 
 //My own
 app.component('auth-layout', AuthLayout)
@@ -42,6 +47,9 @@ app.component('auth-layout', AuthLayout)
 
 //PrimeVue
 app.component('Button', Button);
+app.component('InputText', InputText);
+app.component('Dialog', Dialog);
+app.component('Toast', Toast);
 
 //Unicons
 Unicon.add([uniPlus]);

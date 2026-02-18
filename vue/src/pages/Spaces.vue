@@ -1,13 +1,56 @@
 <script setup>
+import {ref, reactive} from "vue";
 
-function testAxios() {
-  axios.get('/api/test');
+import { useToast } from 'primevue/usetoast';
+const toast = useToast();
+
+let createSpaceDialogVisible = ref(false);
+let createSpaceForm = reactive({
+  name: '',
+  description: ''
+});
+const createSpaceErrors = ref({});
+
+function createSpace() {
+  axios.post('http://localhost:8081/spaces', createSpaceForm)
+      .then((response) => {
+        createSpaceErrors.value = {};
+        createSpaceDialogVisible.value = false;
+
+        createSpaceForm.name = '';
+        createSpaceForm.description = '';
+
+        toast.add({severity:'success', summary: 'Success', detail:'Space created', life: 3000});
+      })
+      .catch((error) => {
+        createSpaceErrors.value = error.response.data.errors;
+      });
 }
 
 </script>
 
 <template>
 <default-layout>
+    <!--Floating notification component-->
+    <Toast position="top-left"/>
+
+    <!--CREATE SPACE DIALOG-->
+    <Dialog v-model:visible="createSpaceDialogVisible" modal header="Create a space" :style="{ width: '25rem' }">
+      <div class="flex items-center gap-4 mb-4">
+        <label for="space_name" class="font-semibold w-24">Name</label>
+        <InputText id="space_name" class="flex-auto" autocomplete="off" v-model="createSpaceForm.name"/>
+      </div>
+      <p class="text-red-500" v-if="createSpaceErrors.name">{{ createSpaceErrors.name[0] }}</p>
+      <div class="flex items-center gap-4 mb-8">
+        <label for="space_description" class="font-semibold w-24">Description</label>
+        <InputText id="space_description" class="flex-auto" autocomplete="off" v-model="createSpaceForm.description"/>
+      </div>
+      <div class="flex justify-end gap-2">
+        <Button type="button" label="Cancel" severity="secondary" @click="createSpaceDialogVisible = false"></Button>
+        <Button type="button" label="Save" @click="createSpace"></Button>
+      </div>
+    </Dialog>
+
     <!-- WHITE SIDEBAR -->
     <aside class="sidebar">
         <div class="sidebar-section">
@@ -21,7 +64,10 @@ function testAxios() {
         <div class="sidebar-divider"></div>
 
         <div class="sidebar-section">
-            <div class="sidebar-title">Spaces</div>
+            <div class="sidebar-title flex items-center">
+              <p class="grow">Spaces</p>
+              <Button @click="createSpaceDialogVisible = true"><unicon name="plus" fill="#fff"></unicon></Button>
+            </div>
             <div class="sidebar-item active">Expense tracker</div>
             <div class="sidebar-item">basic features</div>
             <div class="sidebar-item">News</div>
