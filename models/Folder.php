@@ -7,6 +7,14 @@ use yii\db\ActiveRecord;
 
 class Folder extends ActiveRecord
 {
+    //serializer behavior - you need to include relations in serialized output
+    public function fields()
+    {
+        $fields = parent::fields();
+        $fields['lists'] = 'lists';
+        return $fields;
+    }
+
     public static function tableName()
     {
         return 'folders';

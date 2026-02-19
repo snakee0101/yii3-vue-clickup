@@ -7,6 +7,14 @@ use yii\db\ActiveRecord;
 
 class User extends ActiveRecord implements \yii\web\IdentityInterface
 {
+    //serializer behavior - you need to include relations in serialized output
+    public function fields()
+    {
+        $fields = parent::fields();
+        $fields['spaces'] = 'spaces';
+        return $fields;
+    }
+
     public static function tableName()
     {
         return 'users';

@@ -48,11 +48,12 @@ class SpaceController extends ActiveController
     //my own index action handler - return all spaces belonging to current user
     public function actionIndex()
     {
-        $user = User::find()->where(['id' => Yii::$app->user->id])->one();
+        $full_user_hierarchy = User::find()
+            ->with('spaces.folders.lists.tasks')
+            ->where(['id' => Yii::$app->user->id])
+            ->one();
 
-        $s = TaskList::find()->where(['id' => 1])->one();
-
-        return $s->tasks;
+        return $full_user_hierarchy;
     }
 
     public function actionCreate()
