@@ -5,7 +5,7 @@ namespace app\models;
 use Yii;
 use yii\db\ActiveRecord;
 
-class NotesList extends ActiveRecord
+class TaskList extends ActiveRecord
 {
     public static function tableName()
     {
@@ -15,5 +15,10 @@ class NotesList extends ActiveRecord
     public function getFolder()
     {
         return $this->hasOne(Folder::class, ['id' => 'folder_id']);
+    }
+
+    public function getTasks()
+    {
+        return $this->hasMany(Task::class, ['list_id' => 'id']);
     }
 }

@@ -2,8 +2,10 @@
 
 namespace app\controllers;
 
+use app\models\Folder;
 use app\models\Space;
 use app\models\SpaceForm;
+use app\models\TaskList;
 use app\models\User;
 use app\services\SpaceTreeService;
 use Yii;
@@ -46,7 +48,11 @@ class SpaceController extends ActiveController
     //my own index action handler - return all spaces belonging to current user
     public function actionIndex()
     {
-        return User::find()->where(['id' => Yii::$app->user->id])->one();
+        $user = User::find()->where(['id' => Yii::$app->user->id])->one();
+
+        $s = TaskList::find()->where(['id' => 1])->one();
+
+        return $s->tasks;
     }
 
     public function actionCreate()

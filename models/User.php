@@ -46,4 +46,9 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
     {
         return $authKey == $this->getAuthKey();
     }
+
+    public function getSpaces()
+    {
+        return $this->hasMany(Space::class, ['user_id' => 'id']);
+    }
 }

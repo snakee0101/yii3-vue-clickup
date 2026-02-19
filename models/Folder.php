@@ -16,4 +16,9 @@ class Folder extends ActiveRecord
     {
         return $this->hasOne(Space::class, ['id' => 'space_id']);
     }
+
+    public function getLists()
+    {
+        return $this->hasMany(TaskList::class, ['folder_id' => 'id']);
+    }
 }

@@ -11,4 +11,9 @@ class Space extends ActiveRecord
     {
         return 'spaces';
     }
+
+    public function getFolders()
+    {
+        return $this->hasMany(Folder::class, ['space_id' => 'id']);
+    }
 }
