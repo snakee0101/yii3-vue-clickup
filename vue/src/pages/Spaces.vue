@@ -1,5 +1,5 @@
 <script setup>
-import {ref, reactive} from "vue";
+import {ref, reactive, computed, watch} from "vue";
 
 import { useToast } from 'primevue/usetoast';
 const toast = useToast();
@@ -34,6 +34,72 @@ let selectedTreeItem = ref({});
 axios.get('http://localhost:8081/spaces')
 .then((response) => {
   console.log(response.data);
+
+  response.data.spaces.map((space) => {
+    spaces.push({
+      key: 'space-' + space.id,
+      label: space.space_name,
+      icon: 'pi pi-globe',
+      data: {
+        type: 'space',
+      },
+      children: space.folders.map((folder) => {
+        return {
+          key: 'folder-' + folder.id,
+          label: folder.folder_name,
+          icon: 'pi pi-folder-open',
+          data: {
+            type: 'folder',
+          },
+          children: folder.lists.map((list) => {
+            return {
+              key: 'list-' + list.id,
+              label: list.list_name,
+              icon: 'pi pi-list',
+              data: {
+                type: 'list',
+              },
+              tasks: list.tasks //id, list_id, task_content, task_header
+            };
+          })
+        };
+      })
+    });
+  });
+});
+
+//extract and flatten lists that belong to the selected item (be it space, folder or list)
+const selectedLists = ref([]);
+
+watch(selectedTreeItem, (newSelectedTreeItem, oldValue) => {
+  let lists = [];
+  const selectedObjectKey = Object.keys(newSelectedTreeItem)[0];
+
+  spaces.map((space) => {
+    if(selectedObjectKey.includes('space-') && selectedObjectKey !== space.key) {
+      //if we selected a space and its not the space we need - we skip it
+      return;
+    }
+
+    space.children.map((folder) => {
+      if(selectedObjectKey.includes('folder-') && selectedObjectKey !== folder.key) {
+        //if we selected a folder and its not the folder we need - we skip it
+        return;
+      }
+
+      folder.children.map((list) => {
+        if(selectedObjectKey.includes('list-') && selectedObjectKey !== list.key) {
+          //if we selected a list and its not the list we need - we skip it
+          return;
+        }
+
+        lists.push(list);
+      });
+    });
+  });
+
+  selectedLists.value = lists;
+  console.log(selectedLists.value);
 });
 
 </script>
@@ -64,10 +130,7 @@ axios.get('http://localhost:8081/spaces')
     <aside class="sidebar">
         <div class="sidebar-section">
             <div class="sidebar-title">Home</div>
-            <div class="sidebar-item">Inbox</div>
-            <div class="sidebar-item">Replies</div>
-            <div class="sidebar-item">Assigned Comments</div>
-            <div class="sidebar-item">My Tasks</div>
+            <div class="sidebar-item">Menu items</div>
         </div>
 
         <div class="sidebar-divider"></div>
@@ -79,6 +142,8 @@ axios.get('http://localhost:8081/spaces')
             </div>
             <Tree v-model:selectionKeys="selectedTreeItem" :value="spaces" selectionMode="single" class="w-full p-0!"></Tree>
         </div>
+
+        <!--Actions-->
     </aside>
 
 
@@ -110,17 +175,15 @@ axios.get('http://localhost:8081/spaces')
 
         <!-- CONTENT -->
         <div class="content">
-
-            <!-- SECTION 1 -->
-            <div class="section">
-
+            <!-- SHOW SELECT LISTS -->
+            <div class="section" v-for="taskList in selectedLists">
                 <div class="section-header">
                     <div class="section-title">
-                        basic features
+                        {{ taskList.label }}
                     </div>
 
                     <div class="status-pill gray">
-                        TO DO <span>7</span>
+                        CUSTOM  SEGREGATION BY STATUS (LATER) <span>7</span>
                     </div>
                 </div>
 
@@ -131,51 +194,13 @@ axios.get('http://localhost:8081/spaces')
                         <div class="col-priority">Priority</div>
                     </div>
 
-                    <div class="task-row">
-                        <div class="col-name">expense tracker features для моего проекта</div>
-                        <div class="col-due"></div>
-                        <div class="col-priority"></div>
-                    </div>
-
-                    <div class="task-row">
-                        <div class="col-name">примеров проектов expense tracker</div>
+                    <div class="task-row" v-for="task in taskList.tasks" :key="task.id">
+                        <div class="col-name">{{ task.task_header }}</div>
                         <div class="col-due"></div>
                         <div class="col-priority"></div>
                     </div>
                 </div>
-
             </div>
-
-
-            <!-- SECTION 2 -->
-            <div class="section">
-
-                <div class="section-header">
-                    <div class="section-title">
-                        News
-                    </div>
-
-                    <div class="status-pill purple">
-                        IN PROGRESS <span>1</span>
-                    </div>
-                </div>
-
-                <div class="task-table">
-                    <div class="task-row header">
-                        <div class="col-name">Name</div>
-                        <div class="col-due">Due date</div>
-                        <div class="col-priority">Priority</div>
-                    </div>
-
-                    <div class="task-row">
-                        <div class="col-name">в базе еще нужно сохранить ссылки на загруженные изображения</div>
-                        <div class="col-due"></div>
-                        <div class="col-priority"></div>
-                    </div>
-                </div>
-
-            </div>
-
         </div>
     </div>
 </default-layout>
