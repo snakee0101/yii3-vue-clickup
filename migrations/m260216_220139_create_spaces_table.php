@@ -15,7 +15,7 @@ class m260216_220139_create_spaces_table extends Migration
         $this->createTable('spaces', [
             'id' => $this->primaryKey(),
             'user_id' => $this->integer()->notNull(),
-            'name' => $this->string(255)->notNull(),
+            'space_name' => $this->string(255)->notNull(),
             'description' => $this->text(),
         ]);
 

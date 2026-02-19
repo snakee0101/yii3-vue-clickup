@@ -4,6 +4,8 @@ namespace app\controllers;
 
 use app\models\Space;
 use app\models\SpaceForm;
+use app\models\User;
+use app\services\SpaceTreeService;
 use Yii;
 use yii\filters\auth\HttpBearerAuth;
 use yii\filters\Cors;
@@ -44,7 +46,7 @@ class SpaceController extends ActiveController
     //my own index action handler - return all spaces belonging to current user
     public function actionIndex()
     {
-        return Space::find()->where(['user_id' => Yii::$app->user->id])->all();
+        return User::find()->where(['id' => Yii::$app->user->id])->one();
     }
 
     public function actionCreate()

@@ -33,21 +33,8 @@ let selectedTreeItem = ref({});
 
 axios.get('http://localhost:8081/spaces')
 .then((response) => {
-  response.data.forEach(space => {
-    spaces.push({
-      key: space.id.toString(), // unique id (required)
-      label: space.name,        // text displayed
-      icon: 'pi pi-globe',
-      data: {                   // optional custom data
-        description: space.description,
-        type: 'space'
-      },
-      children: []              //there will be folders
-    });
-  });
+  console.log(response.data);
 });
-
-//load folders
 
 </script>
 
