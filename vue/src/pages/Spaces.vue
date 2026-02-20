@@ -28,7 +28,7 @@ function createSpace() {
       });
 }
 
-//load spaces
+//reload spaces
 let spaces = reactive([]);
 let selectedTreeItem = ref({});
 
