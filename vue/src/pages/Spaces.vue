@@ -12,6 +12,14 @@ let createSpaceForm = reactive({
 });
 const createSpaceErrors = ref({});
 
+let createFolderDialogVisible = ref(false);
+let createFolderForm = reactive({
+  folder_name: '',
+  description: '',
+  space_id: null
+});
+const createFolderErrors = ref({});
+
 function createSpace() {
   axios.post('http://localhost:8081/spaces', createSpaceForm)
       .then((response) => {
@@ -31,43 +39,41 @@ function createSpace() {
 
 //reload spaces
 const spaces = ref([]);
-let selectedTreeItem = ref({});
+let selectedTreeItem = ref({ "all": true });
 
-const selectedTreeItemType = computed(() => {
-  return Object.keys(selectedTreeItem.value)[0].split('-')[0];
+const selectedTreeItemData = computed(() => {
+  let object_key = Object.keys(selectedTreeItem.value)[0]; //like "space-1", "folder-2", "list-3", "all"
+
+  return {
+    'type': object_key === 'all' ? 'all' : object_key.split('-')[0],
+    'id': object_key === 'all' ? 'all' : object_key.split('-')[1]
+  };
 });
 
 function reloadSpaces() {
   axios.get('http://localhost:8081/spaces')
       .then((response) => {
 
-        const spaceNodes = response.data.spaces.map((space) => {
-          return {
-            key: 'space-' + space.id,
-            label: space.space_name,
-            icon: 'pi pi-globe',
-            data: {type: 'space'},
-            children: space.folders.map((folder) => {
-              return {
-                key: 'folder-' + folder.id,
-                label: folder.folder_name,
-                icon: 'pi pi-folder-open',
-                data: {type: 'folder'},
-                children: folder.lists.map((list) => {
-                  return {
-                    key: 'list-' + list.id,
-                    label: list.list_name,
-                    icon: 'pi pi-list',
-                    data: {type: 'list'},
-                    tasks: list.tasks
-                  };
-                })
-              };
-            })
-          };
-        });
+        const spaceNodes = response.data.spaces.map((space) => ({
+          key: 'space-' + space.id,
+          label: space.space_name,
+          icon: 'pi pi-globe',
+          data: { type: 'space' },
+          children: space.folders.map((folder) => ({
+            key: 'folder-' + folder.id,
+            label: folder.folder_name,
+            icon: 'pi pi-folder-open',
+            data: { type: 'folder' },
+            children: folder.lists.map((list) => ({
+              key: 'list-' + list.id,
+              label: list.list_name,
+              icon: 'pi pi-list',
+              data: { type: 'list' },
+              tasks: list.tasks
+            }))
+          }))
+        }));
 
-        // 👇 NEW ROOT NODE
         spaces.value = [
           {
             key: 'all',
@@ -78,6 +84,11 @@ function reloadSpaces() {
           }
         ];
 
+        // 🔥 SET SELECTION AFTER DATA EXISTS
+        selectedTreeItem.value = { all: true };
+
+        // optionally process lists here instead of manual call below
+        processSelectedTreeItem(selectedTreeItem.value);
       });
 }
 
@@ -86,9 +97,9 @@ reloadSpaces();
 //extract and flatten lists that belong to the selected item (be it space, folder or list)
 const selectedLists = ref([]);
 
-watch(selectedTreeItem, (newSelectedTreeItem) => {
+function processSelectedTreeItem(selectedItem) {
   let lists = [];
-  const selectedObjectKey = Object.keys(newSelectedTreeItem)[0];
+  const selectedObjectKey = Object.keys(selectedItem)[0];
 
   if (!selectedObjectKey) {
     selectedLists.value = [];
@@ -130,15 +141,33 @@ watch(selectedTreeItem, (newSelectedTreeItem) => {
   });
 
   selectedLists.value = lists;
-});
+}
 
-
+watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
 </script>
 
 <template>
   <default-layout>
     <!--Floating notification component-->
     <Toast position="top-left"/>
+
+    <!--CREATE FOLDER DIALOG-->
+    <Dialog v-model:visible="createFolderDialogVisible" modal header="Create a folder" :style="{ width: '25rem' }">
+      <div class="flex items-center gap-4 mb-4">
+        <label for="folder_name" class="font-semibold w-24">Name</label>
+        <InputText id="folder_name" class="flex-auto" autocomplete="off" v-model="createFolderForm.folder_name"/>
+      </div>
+      <p class="text-red-500" v-if="createFolderErrors.folder_name">{{ createFolderErrors.folder_name[0] }}</p>
+      <div class="flex items-center gap-4 mb-8">
+        <label for="folder_description" class="font-semibold w-24">Description</label>
+        <InputText id="folder_description" class="flex-auto" autocomplete="off" v-model="createFolderForm.description"/>
+      </div>
+      <div class="flex justify-end gap-2">
+        <Button type="button" label="Cancel" severity="secondary" @click="createFolderDialogVisible = false"></Button>
+        <Button type="button" label="Save" @click="createFolder"></Button>
+      </div>
+    </Dialog>
+
 
     <!--CREATE SPACE DIALOG-->
     <Dialog v-model:visible="createSpaceDialogVisible" modal header="Create a space" :style="{ width: '25rem' }">
@@ -179,8 +208,8 @@ watch(selectedTreeItem, (newSelectedTreeItem) => {
 
       <!--Actions-->
       <!--Spaces Actions-->
-      <div class="sidebar-section" v-if="selectedTreeItemType == 'space'">
-        <Button type="button" label="+ Folder" @click="" class="p-0! px-1! mr-2!"></Button>
+      <div class="sidebar-section" v-if="selectedTreeItemData.type == 'space'">
+        <Button type="button" label="+ Folder" @click="createFolderDialogVisible = true" class="p-0! px-1! mr-2!"></Button>
       </div>
     </aside>
 
