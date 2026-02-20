@@ -33,6 +33,10 @@ function createSpace() {
 const spaces = ref([]);
 let selectedTreeItem = ref({});
 
+const selectedTreeItemType = computed(() => {
+  return Object.keys(selectedTreeItem.value)[0].split('-')[0];
+});
+
 function reloadSpaces() {
   axios.get('http://localhost:8081/spaces')
       .then((response) => {
@@ -174,6 +178,10 @@ watch(selectedTreeItem, (newSelectedTreeItem) => {
       </div>
 
       <!--Actions-->
+      <!--Spaces Actions-->
+      <div class="sidebar-section" v-if="selectedTreeItemType == 'space'">
+        <Button type="button" label="+ Folder" @click="" class="p-0! px-1! mr-2!"></Button>
+      </div>
     </aside>
 
 
