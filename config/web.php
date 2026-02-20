@@ -52,7 +52,7 @@ $config = [
             'rules' => [
                 [
                     'class' => 'yii\rest\UrlRule',
-                    'controller' => ['space'],
+                    'controller' => ['space', 'folder'],
                 ],
             ],
         ],

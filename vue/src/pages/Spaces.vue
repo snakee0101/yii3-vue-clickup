@@ -41,14 +41,17 @@ function createSpace() {
 const spaces = ref([]);
 let selectedTreeItem = ref({ "all": true });
 
-const selectedTreeItemData = computed(() => {
-  let object_key = Object.keys(selectedTreeItem.value)[0]; //like "space-1", "folder-2", "list-3", "all"
+function parseTreeItemData(parsedValue)
+{
+  let object_key = Object.keys(parsedValue)[0]; //like "space-1", "folder-2", "list-3", "all". Example: "space-1" -> {type: 'space', id: 1}
 
   return {
     'type': object_key === 'all' ? 'all' : object_key.split('-')[0],
     'id': object_key === 'all' ? 'all' : object_key.split('-')[1]
   };
-});
+}
+
+const selectedTreeItemData = computed(() => parseTreeItemData(selectedTreeItem.value));
 
 function reloadSpaces() {
   axios.get('http://localhost:8081/spaces')
@@ -141,6 +144,24 @@ function processSelectedTreeItem(selectedItem) {
   });
 
   selectedLists.value = lists;
+}
+
+function createFolder() {
+  axios.post('http://localhost:8081/folders', {...createFolderForm, space_id: selectedTreeItemData.value.id})
+      .then((response) => {
+        createFolderErrors.value = {};
+        createFolderDialogVisible.value = false;
+
+        createFolderForm.folder_name = '';
+        createFolderForm.description = '';
+        createFolderForm.space_id = null;
+
+        toast.add({severity: 'success', summary: 'Success', detail: 'Folder created', life: 3000});
+        reloadSpaces();
+      })
+      .catch((error) => {
+        createFolderErrors.value = error.response.data.errors;
+      });
 }
 
 watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
