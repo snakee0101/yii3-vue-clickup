@@ -6,13 +6,13 @@ use yii\base\Model;
 
 class SpaceForm extends Model
 {
-    public $name;
+    public $space_name;
 
     public function rules()
     {
         return [
-            [['name'], 'required'],
-            [['name'], 'unique', 'targetClass' => Space::class, 'targetAttribute' => 'name']
+            [['space_name'], 'required'],
+            [['space_name'], 'unique', 'targetClass' => Space::class, 'targetAttribute' => 'space_name']
         ];
     }
 }

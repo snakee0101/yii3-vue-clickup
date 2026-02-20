@@ -22,6 +22,7 @@ function createSpace() {
         createSpaceForm.description = '';
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Space created', life: 3000});
+        reloadSpaces();
       })
       .catch((error) => {
         createSpaceErrors.value = error.response.data.errors;
@@ -29,48 +30,54 @@ function createSpace() {
 }
 
 //reload spaces
-let spaces = reactive([]);
+const spaces = ref([]);
 let selectedTreeItem = ref({});
 
-axios.get('http://localhost:8081/spaces')
-    .then((response) => {
+function reloadSpaces() {
+  axios.get('http://localhost:8081/spaces')
+      .then((response) => {
 
-      const spaceNodes = response.data.spaces.map((space) => {
-        return {
-          key: 'space-' + space.id,
-          label: space.space_name,
-          icon: 'pi pi-globe',
-          data: {type: 'space'},
-          children: space.folders.map((folder) => {
-            return {
-              key: 'folder-' + folder.id,
-              label: folder.folder_name,
-              icon: 'pi pi-folder-open',
-              data: {type: 'folder'},
-              children: folder.lists.map((list) => {
-                return {
-                  key: 'list-' + list.id,
-                  label: list.list_name,
-                  icon: 'pi pi-list',
-                  data: {type: 'list'},
-                  tasks: list.tasks
-                };
-              })
-            };
-          })
-        };
+        const spaceNodes = response.data.spaces.map((space) => {
+          return {
+            key: 'space-' + space.id,
+            label: space.space_name,
+            icon: 'pi pi-globe',
+            data: {type: 'space'},
+            children: space.folders.map((folder) => {
+              return {
+                key: 'folder-' + folder.id,
+                label: folder.folder_name,
+                icon: 'pi pi-folder-open',
+                data: {type: 'folder'},
+                children: folder.lists.map((list) => {
+                  return {
+                    key: 'list-' + list.id,
+                    label: list.list_name,
+                    icon: 'pi pi-list',
+                    data: {type: 'list'},
+                    tasks: list.tasks
+                  };
+                })
+              };
+            })
+          };
+        });
+
+        // 👇 NEW ROOT NODE
+        spaces.value = [
+          {
+            key: 'all',
+            label: 'All Tasks',
+            icon: 'pi pi-th-large',
+            data: { type: 'all' },
+            children: spaceNodes
+          }
+        ];
+
       });
+}
 
-      // 👇 NEW ROOT NODE
-      spaces.push({
-        key: 'all',
-        label: 'All Tasks',
-        icon: 'pi pi-th-large',
-        data: {type: 'all'},
-        children: spaceNodes
-      });
-
-    });
+reloadSpaces();
 
 //extract and flatten lists that belong to the selected item (be it space, folder or list)
 const selectedLists = ref([]);
@@ -85,7 +92,7 @@ watch(selectedTreeItem, (newSelectedTreeItem) => {
   }
 
   // 👇 actual spaces are inside root
-  const realSpaces = spaces[0]?.children || [];
+  const realSpaces = spaces.value[0]?.children || [];
 
   // 🔥 ALL TASKS
   if (selectedObjectKey === 'all') {

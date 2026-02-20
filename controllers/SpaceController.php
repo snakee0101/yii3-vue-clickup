@@ -61,7 +61,7 @@ class SpaceController extends ActiveController
         ['name' => $name, 'description' => $description] = Yii::$app->request->post();
 
         $model = new SpaceForm();
-        $model->name = $name;
+        $model->space_name = $name;
 
         if ($model->validate() === false) {
             Yii::$app->response->statusCode = 422;
@@ -71,7 +71,7 @@ class SpaceController extends ActiveController
 
         //This IS ActiveRecord model that saves data to DB
         $space = new Space();
-        $space->name = $name;
+        $space->space_name = $name;
         $space->description = $description;
         $space->user_id = Yii::$app->user->id;
         $space->save();
