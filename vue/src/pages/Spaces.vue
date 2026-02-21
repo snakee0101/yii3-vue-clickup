@@ -12,6 +12,8 @@ let createSpaceForm = reactive({
 });
 const createSpaceErrors = ref({});
 
+
+
 let createFolderDialogVisible = ref(false);
 let createFolderForm = reactive({
   folder_name: '',
@@ -19,6 +21,16 @@ let createFolderForm = reactive({
   space_id: null
 });
 const createFolderErrors = ref({});
+
+
+let createListDialogVisible = ref(false);
+let createListForm = reactive({
+  list_name: '',
+  description: '',
+  folder_id: null
+});
+const createListErrors = ref({});
+
 
 function createSpace() {
   axios.post('http://localhost:8081/spaces', createSpaceForm)
@@ -164,6 +176,24 @@ function createFolder() {
       });
 }
 
+function createList() {
+  axios.post('http://localhost:8081/task-lists', {...createListForm, folder_id: selectedTreeItemData.value.id})
+      .then((response) => {
+        createListErrors.value = {};
+        createListDialogVisible.value = false;
+
+        createListForm.list_name = '';
+        createListForm.description = '';
+        createListForm.folder_id = null;
+
+        toast.add({severity: 'success', summary: 'Success', detail: 'List created', life: 3000});
+        reloadSpaces();
+      })
+      .catch((error) => {
+        createListErrors.value = error.response.data.errors;
+      });
+}
+
 watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
 </script>
 
@@ -171,6 +201,23 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
   <default-layout>
     <!--Floating notification component-->
     <Toast position="top-left"/>
+
+    <!--CREATE LIST DIALOG-->
+    <Dialog v-model:visible="createListDialogVisible" modal header="Create a List" :style="{ width: '25rem' }">
+      <div class="flex items-center gap-4 mb-4">
+        <label for="list_name" class="font-semibold w-24">Name</label>
+        <InputText id="list_name" class="flex-auto" autocomplete="off" v-model="createListForm.list_name"/>
+      </div>
+      <p class="text-red-500" v-if="createListErrors.list_name">{{ createListErrors.list_name[0] }}</p>
+      <div class="flex items-center gap-4 mb-8">
+        <label for="list_description" class="font-semibold w-24">Description</label>
+        <InputText id="list_description" class="flex-auto" autocomplete="off" v-model="createListForm.description"/>
+      </div>
+      <div class="flex justify-end gap-2">
+        <Button type="button" label="Cancel" severity="secondary" @click="createListDialogVisible = false"></Button>
+        <Button type="button" label="Save" @click="createList"></Button>
+      </div>
+    </Dialog>
 
     <!--CREATE FOLDER DIALOG-->
     <Dialog v-model:visible="createFolderDialogVisible" modal header="Create a folder" :style="{ width: '25rem' }">
@@ -231,6 +278,11 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
       <!--Spaces Actions-->
       <div class="sidebar-section" v-if="selectedTreeItemData.type == 'space'">
         <Button type="button" label="+ Folder" @click="createFolderDialogVisible = true" class="p-0! px-1! mr-2!"></Button>
+      </div>
+
+      <!--Folder Actions-->
+      <div class="sidebar-section" v-if="selectedTreeItemData.type == 'folder'">
+        <Button type="button" label="+ List" @click="createListDialogVisible = true" class="p-0! px-1! mr-2!"></Button>
       </div>
     </aside>
 
