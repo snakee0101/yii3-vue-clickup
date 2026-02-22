@@ -16,6 +16,7 @@ import Dialog from 'primevue/dialog';
 import Toast from 'primevue/toast';
 import ToastService from 'primevue/toastservice';
 import Tree from 'primevue/tree';
+import Textarea from 'primevue/textarea';
 
 //Unicons icons docs: https://iconscout.com/unicons/thin-line-icons/plus,  https://github.com/antonreshetov/vue-unicons
 //example of styling: <unicon name="plus" fill="#ffffff" stroke="#ffffff"></unicon>
@@ -52,6 +53,7 @@ app.component('InputText', InputText);
 app.component('Dialog', Dialog);
 app.component('Toast', Toast);
 app.component('Tree', Tree);
+app.component('Textarea', Textarea);
 
 //Unicons
 Unicon.add([uniPlus]);

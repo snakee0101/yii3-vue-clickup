@@ -194,6 +194,41 @@ function createList() {
       });
 }
 
+const createTaskDialogVisible = ref(false);
+const selectedTaskListId = ref(null);
+
+function openCreateTaskDialog(taskList) {
+  createTaskDialogVisible.value = true;
+  selectedTaskListId.value = taskList.key.split('-')[1];
+
+  console.log('Selected task list:', selectedTaskListId.value);
+}
+
+let createTaskForm = reactive({
+  task_header: '',
+  task_content: '',
+  list_id: null
+});
+const createTaskErrors = ref({});
+
+function createTask() {
+  axios.post('http://localhost:8081/tasks', {...createTaskForm, list_id: selectedTaskListId.value})
+      .then((response) => {
+        createTaskErrors.value = {};
+        createTaskDialogVisible.value = false;
+
+        createTaskForm.task_header = '';
+        createTaskForm.task_content = '';
+        createTaskForm.list_id = null;
+
+        toast.add({severity: 'success', summary: 'Success', detail: 'Task created', life: 3000});
+        reloadSpaces();
+      })
+      .catch((error) => {
+        createTaskErrors.value = error.response.data.errors;
+      });
+}
+
 watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
 </script>
 
@@ -201,6 +236,21 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
   <default-layout>
     <!--Floating notification component-->
     <Toast position="top-left"/>
+
+    <!--CREATE TASK DIALOG-->
+    <Dialog v-model:visible="createTaskDialogVisible" modal header="Create a Task" :style="{ width: '50rem' }">
+      <div class="flex items-center gap-4 mb-4">
+        <InputText id="task_header" class="flex-auto" autocomplete="off" v-model="createTaskForm.task_header" placeholder="Task name"/>
+      </div>
+      <p class="text-red-500" v-if="createTaskErrors.task_header">{{ createTaskErrors.task_header[0] }}</p>
+      <div class="flex items-center gap-4 mt-4!">
+        <Textarea id="task_content" class="flex-auto" autocomplete="off" rows="5" cols="30" v-model="createTaskForm.task_content" placeholder="Task description"/>
+      </div>
+      <div class="flex justify-end gap-2 mt-4!">
+        <Button type="button" label="Cancel" severity="secondary" @click="createTaskDialogVisible = false"></Button>
+        <Button type="button" label="Save" @click="createTask"></Button>
+      </div>
+    </Dialog>
 
     <!--CREATE LIST DIALOG-->
     <Dialog v-model:visible="createListDialogVisible" modal header="Create a List" :style="{ width: '25rem' }">
@@ -322,9 +372,8 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
               {{ taskList.label }}
             </div>
 
-            <div class="status-pill gray">
-              CUSTOM SEGREGATION BY STATUS (LATER) <span>7</span>
-            </div>
+
+            <Button type="button" label="+ Task" @click="openCreateTaskDialog(taskList)" class="p-0! px-1! mr-2!"></Button>
           </div>
 
           <div class="task-table">
