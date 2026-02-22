@@ -73,12 +73,20 @@ function reloadSpaces() {
           key: 'space-' + space.id,
           label: space.space_name,
           icon: 'pi pi-globe',
-          data: { type: 'space', description: space.description, name: space.space_name },
+          data: {
+            type: 'space',
+            description: space.description,
+            name: space.space_name
+          },
           children: space.folders.map((folder) => ({
             key: 'folder-' + folder.id,
             label: folder.folder_name,
             icon: 'pi pi-folder-open',
-            data: { type: 'folder' },
+            data: {
+              type: 'folder',
+              folder_name: folder.folder_name,
+              description: folder.description
+            },
             children: folder.lists.map((list) => ({
               key: 'list-' + list.id,
               label: list.list_name,
@@ -262,11 +270,54 @@ function editSpace() {
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Space changed', life: 3000});
         reloadSpaces();
-
-        editSpaceDialogVisible.value = false;
       })
       .catch((error) => {
         editSpaceErrors.value = error.response.data.errors;
+      });
+}
+
+
+//Edit Folder Dialog
+const editFolderDialogVisible = ref(false);
+let editFolderForm = reactive({
+  folder_name: '',
+  description: ''
+});
+const editFolderErrors = ref({});
+
+function openEditFolderDialog() {
+  const folderId = selectedTreeItemData.value.id;
+
+  const allSpaces = spaces.value[0].children;
+  allSpaces.map(function (space) {
+      //find specific folder and get its fields
+      space.children.map(function (folder) {
+        if(folder.key == 'folder-' + folderId) {
+            editFolderForm.folder_name = folder.data.folder_name;
+            editFolderForm.description = folder.data.description;
+        }
+      });
+  });
+
+  editFolderDialogVisible.value = true;
+}
+
+function editFolder() {
+  const folderId = selectedTreeItemData.value.id;
+
+  axios.put('http://localhost:8081/folders/' + folderId, editFolderForm)
+      .then((response) => {
+        editFolderErrors.value = {};
+        editFolderDialogVisible.value = false;
+
+        editFolderForm.folder_name = '';
+        editFolderForm.description = '';
+
+        toast.add({severity: 'success', summary: 'Success', detail: 'Folder changed', life: 3000});
+        reloadSpaces();
+      })
+      .catch((error) => {
+        editFolderErrors.value = error.response.data.errors;
       });
 }
 
@@ -307,6 +358,23 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
       <div class="flex justify-end gap-2">
         <Button type="button" label="Cancel" severity="secondary" @click="createListDialogVisible = false"></Button>
         <Button type="button" label="Save" @click="createList"></Button>
+      </div>
+    </Dialog>
+
+    <!--EDIT FOLDER DIALOG-->
+    <Dialog v-model:visible="editFolderDialogVisible" modal header="Edit a folder" :style="{ width: '25rem' }">
+      <div class="flex items-center gap-4 mb-4">
+        <label for="edit_folder_name" class="font-semibold w-24">Name</label>
+        <InputText id="edit_folder_name" class="flex-auto" autocomplete="off" v-model="editFolderForm.folder_name"/>
+      </div>
+      <p class="text-red-500" v-if="editFolderErrors.folder_name">{{ editFolderErrors.folder_name[0] }}</p>
+      <div class="flex items-center gap-4 mb-8">
+        <label for="edit_folder_description" class="font-semibold w-24">Description</label>
+        <InputText id="edit_folder_description" class="flex-auto" autocomplete="off" v-model="editFolderForm.description"/>
+      </div>
+      <div class="flex justify-end gap-2">
+        <Button type="button" label="Cancel" severity="secondary" @click="editFolderDialogVisible = false"></Button>
+        <Button type="button" label="Save" @click="editFolder"></Button>
       </div>
     </Dialog>
 
@@ -392,6 +460,7 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
       <!--Folder Actions-->
       <div class="sidebar-section mt-4!" v-if="selectedTreeItemData.type == 'folder'">
         <Button type="button" label="+ List" @click="createListDialogVisible = true" class="p-0! px-1! mr-2!"></Button>
+        <Button type="button" label="Edit" @click="openEditFolderDialog" class="p-0! px-1! mr-2!"></Button>
       </div>
     </aside>
 

@@ -35,7 +35,7 @@ class FolderController extends ActiveController
     public function actions()
     {
         $actions = parent::actions();
-        unset($actions['create']);
+        unset($actions['create'], $actions['update']);
         return $actions;
     }
 
@@ -57,6 +57,28 @@ class FolderController extends ActiveController
         $folder->folder_name = $folder_name;
         $folder->description = $description;
         $folder->space_id = $space_id;
+        $folder->save();
+
+        return $folder;
+    }
+
+    public function actionUpdate($id)
+    {
+        ['folder_name' => $folder_name, 'description' => $description] = Yii::$app->request->post();
+
+        $model = new FolderForm();
+        $model->folder_name = $folder_name;
+
+        if ($model->validate() === false) {
+            Yii::$app->response->statusCode = 422;
+
+            return ['errors' => $model->errors];
+        }
+
+        //update model
+        $folder = Folder::find()->where(['id' => $id])->one();
+        $folder->folder_name = $folder_name;
+        $folder->description = $description;
         $folder->save();
 
         return $folder;
