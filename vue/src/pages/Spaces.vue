@@ -73,7 +73,7 @@ function reloadSpaces() {
           key: 'space-' + space.id,
           label: space.space_name,
           icon: 'pi pi-globe',
-          data: { type: 'space' },
+          data: { type: 'space', description: space.description, name: space.space_name },
           children: space.folders.map((folder) => ({
             key: 'folder-' + folder.id,
             label: folder.folder_name,
@@ -229,6 +229,47 @@ function createTask() {
       });
 }
 
+//Edit Space Dialog
+const editSpaceDialogVisible = ref(false);
+let editSpaceForm = reactive({
+  name: '',
+  description: ''
+});
+const editSpaceErrors = ref({});
+
+function openEditSpaceDialog() {
+  const spaceId = selectedTreeItemData.value.id;
+
+  const allSpaces = spaces.value[0].children;
+  const selectedSpace = allSpaces.find(space => space.key == 'space-' + spaceId);
+
+  editSpaceForm.name = selectedSpace.data.name;
+  editSpaceForm.description = selectedSpace.data.description;
+
+  editSpaceDialogVisible.value = true;
+}
+
+function editSpace() {
+  const selectedSpaceId = selectedTreeItemData.value.id;
+
+  axios.put('http://localhost:8081/spaces/' + selectedSpaceId, editSpaceForm)
+      .then((response) => {
+        editSpaceErrors.value = {};
+        editSpaceDialogVisible.value = false;
+
+        editSpaceForm.name = '';
+        editSpaceForm.description = '';
+
+        toast.add({severity: 'success', summary: 'Success', detail: 'Space changed', life: 3000});
+        reloadSpaces();
+
+        editSpaceDialogVisible.value = false;
+      })
+      .catch((error) => {
+        editSpaceErrors.value = error.response.data.errors;
+      });
+}
+
 watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
 </script>
 
@@ -287,6 +328,23 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
     </Dialog>
 
 
+    <!--EDIT SPACE DIALOG-->
+    <Dialog v-model:visible="editSpaceDialogVisible" modal header="Edit a space" :style="{ width: '25rem' }">
+      <div class="flex items-center gap-4 mb-4">
+        <label for="edit_space_name" class="font-semibold w-24">Name</label>
+        <InputText id="edit_space_name" class="flex-auto" autocomplete="off" v-model="editSpaceForm.name"/>
+      </div>
+      <p class="text-red-500" v-if="editSpaceErrors.space_name">{{ editSpaceErrors.space_name[0] }}</p>
+      <div class="flex items-center gap-4 mb-8">
+        <label for="edit_space_description" class="font-semibold w-24">Description</label>
+        <InputText id="edit_space_description" class="flex-auto" autocomplete="off" v-model="editSpaceForm.description"/>
+      </div>
+      <div class="flex justify-end gap-2">
+        <Button type="button" label="Cancel" severity="secondary" @click="editSpaceDialogVisible = false"></Button>
+        <Button type="button" label="Save" @click="editSpace"></Button>
+      </div>
+    </Dialog>
+
     <!--CREATE SPACE DIALOG-->
     <Dialog v-model:visible="createSpaceDialogVisible" modal header="Create a space" :style="{ width: '25rem' }">
       <div class="flex items-center gap-4 mb-4">
@@ -326,12 +384,13 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
 
       <!--Actions-->
       <!--Spaces Actions-->
-      <div class="sidebar-section" v-if="selectedTreeItemData.type == 'space'">
+      <div class="sidebar-section mt-4!" v-if="selectedTreeItemData.type == 'space'">
         <Button type="button" label="+ Folder" @click="createFolderDialogVisible = true" class="p-0! px-1! mr-2!"></Button>
+        <Button type="button" label="Edit" @click="openEditSpaceDialog" class="p-0! px-1! mr-2!"></Button>
       </div>
 
       <!--Folder Actions-->
-      <div class="sidebar-section" v-if="selectedTreeItemData.type == 'folder'">
+      <div class="sidebar-section mt-4!" v-if="selectedTreeItemData.type == 'folder'">
         <Button type="button" label="+ List" @click="createListDialogVisible = true" class="p-0! px-1! mr-2!"></Button>
       </div>
     </aside>

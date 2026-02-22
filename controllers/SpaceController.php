@@ -41,7 +41,7 @@ class SpaceController extends ActiveController
     public function actions()
     {
         $actions = parent::actions();
-        unset($actions['index'], $actions['create']);   //delete default index action handler (which just returns every Space which we dont want) and redefine my own handler
+        unset($actions['index'], $actions['create'], $actions['update']);   //delete default index action handler (which just returns every Space which we dont want) and redefine my own handler
         return $actions;
     }
 
@@ -74,6 +74,28 @@ class SpaceController extends ActiveController
         $space->space_name = $name;
         $space->description = $description;
         $space->user_id = Yii::$app->user->id;
+        $space->save();
+
+        return $space;
+    }
+
+    public function actionUpdate($id)
+    {
+        ['name' => $name, 'description' => $description] = Yii::$app->request->post();
+
+        $model = new SpaceForm();
+        $model->space_name = $name;
+
+        if ($model->validate() === false) {
+            Yii::$app->response->statusCode = 422;
+
+            return ['errors' => $model->errors];
+        }
+
+        //update model
+        $space = Space::find()->where(['id' => $id])->one();
+        $space->space_name = $name;
+        $space->description = $description;
         $space->save();
 
         return $space;
