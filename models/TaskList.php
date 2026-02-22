@@ -27,6 +27,7 @@ class TaskList extends ActiveRecord
 
     public function getTasks()
     {
-        return $this->hasMany(Task::class, ['list_id' => 'id']);
+        return $this->hasMany(Task::class, ['list_id' => 'id'])
+                    ->where(['parent_id' => null]);
     }
 }

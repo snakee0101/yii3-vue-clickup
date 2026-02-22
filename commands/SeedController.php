@@ -121,6 +121,31 @@ class SeedController extends Controller
         return $tasks;
     }
 
+    protected function seedSubTasks($tasks)
+    {
+        $faker = Faker\Factory::create();
+
+        $subtasks = [];
+
+        foreach ($tasks as $key => $task) {
+            if($key % 2 == 0) continue;
+
+            for ($i = 0; $i < 2; $i++) {
+                $subtask = new \app\models\Task();
+                $subtask->list_id = $task->list_id;
+                $subtask->task_header = $faker->sentence;
+                $subtask->task_content = $faker->paragraph;
+                $subtask->parent_id = $task->id;
+                $subtask->save(false);
+
+                $subtasks[] = $subtask;
+            }
+        }
+
+        echo "Seeding subtasks..." . "\n";
+        return $subtasks;
+    }
+
     public function actionIndex()
     {
         $users = $this->seedUsers();
@@ -128,6 +153,7 @@ class SeedController extends Controller
         $folders = $this->seedFolders($spaces);
         $lists = $this->seedLists($folders);
         $tasks = $this->seedTasks($lists);
+        $this->seedSubTasks($tasks);
 
         echo "Database seeded successfully" . "\n";
 
