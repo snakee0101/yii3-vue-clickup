@@ -91,7 +91,11 @@ function reloadSpaces() {
               key: 'list-' + list.id,
               label: list.list_name,
               icon: 'pi pi-list',
-              data: { type: 'list' },
+              data: {
+                type: 'list',
+                list_name: list.list_name,
+                description: list.description
+              },
               tasks: list.tasks
             }))
           }))
@@ -321,6 +325,54 @@ function editFolder() {
       });
 }
 
+//Edit List Dialog
+const editListDialogVisible = ref(false);
+let editListForm = reactive({
+  list_name: '',
+  description: '',
+  folder_id: null
+});
+const editListErrors = ref({});
+
+function openEditListDialog() {
+  const listId = selectedTreeItemData.value.id;
+
+  const allSpaces = spaces.value[0].children;
+  allSpaces.map(function (space) {
+    //find specific folder and get its fields
+    space.children.map(function (folder) {
+      folder.children.map(function (list) {
+        if(list.key == 'list-' + listId) {
+          editListForm.list_name = list.data.list_name;
+          editListForm.description = list.data.description;
+        }
+      });
+
+    });
+  });
+
+  editListDialogVisible.value = true;
+}
+
+function editList() {
+  const listId = selectedTreeItemData.value.id;
+
+  axios.put('http://localhost:8081/task-lists/' + listId, editListForm)
+      .then((response) => {
+        editListErrors.value = {};
+        editListDialogVisible.value = false;
+
+        editListForm.list_name = '';
+        editListForm.description = '';
+
+        toast.add({severity: 'success', summary: 'Success', detail: 'List changed', life: 3000});
+        reloadSpaces();
+      })
+      .catch((error) => {
+        editListErrors.value = error.response.data.errors;
+      });
+}
+
 watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
 </script>
 
@@ -358,6 +410,23 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
       <div class="flex justify-end gap-2">
         <Button type="button" label="Cancel" severity="secondary" @click="createListDialogVisible = false"></Button>
         <Button type="button" label="Save" @click="createList"></Button>
+      </div>
+    </Dialog>
+
+    <!--EDIT LIST DIALOG-->
+    <Dialog v-model:visible="editListDialogVisible" modal header="Edit a List" :style="{ width: '25rem' }">
+      <div class="flex items-center gap-4 mb-4">
+        <label for="edit_list_name" class="font-semibold w-24">Name</label>
+        <InputText id="edit_list_name" class="flex-auto" autocomplete="off" v-model="editListForm.list_name"/>
+      </div>
+      <p class="text-red-500" v-if="editListErrors.list_name">{{ editListErrors.list_name[0] }}</p>
+      <div class="flex items-center gap-4 mb-8">
+        <label for="edit_list_description" class="font-semibold w-24">Description</label>
+        <InputText id="edit_list_description" class="flex-auto" autocomplete="off" v-model="editListForm.description"/>
+      </div>
+      <div class="flex justify-end gap-2">
+        <Button type="button" label="Cancel" severity="secondary" @click="editListDialogVisible = false"></Button>
+        <Button type="button" label="Save" @click="editList"></Button>
       </div>
     </Dialog>
 
@@ -461,6 +530,11 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
       <div class="sidebar-section mt-4!" v-if="selectedTreeItemData.type == 'folder'">
         <Button type="button" label="+ List" @click="createListDialogVisible = true" class="p-0! px-1! mr-2!"></Button>
         <Button type="button" label="Edit" @click="openEditFolderDialog" class="p-0! px-1! mr-2!"></Button>
+      </div>
+
+      <!--List Actions-->
+      <div class="sidebar-section mt-4!" v-if="selectedTreeItemData.type == 'list'">
+        <Button type="button" label="Edit" @click="openEditListDialog" class="p-0! px-1! mr-2!"></Button>
       </div>
     </aside>
 

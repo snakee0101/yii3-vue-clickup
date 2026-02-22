@@ -35,7 +35,7 @@ class TaskListController extends ActiveController
     public function actions()
     {
         $actions = parent::actions();
-        unset($actions['create']);
+        unset($actions['create'], $actions['update']);
         return $actions;
     }
 
@@ -57,6 +57,28 @@ class TaskListController extends ActiveController
         $list->list_name = $list_name;
         $list->description = $description;
         $list->folder_id = $folder_id;
+        $list->save();
+
+        return $list;
+    }
+
+    public function actionUpdate($id)
+    {
+        ['list_name' => $list_name, 'description' => $description] = Yii::$app->request->post();
+
+        $model = new TaskListForm();
+        $model->list_name = $list_name;
+
+        if ($model->validate() === false) {
+            Yii::$app->response->statusCode = 422;
+
+            return ['errors' => $model->errors];
+        }
+
+        //update model
+        $list = TaskList::find()->where(['id' => $id])->one();
+        $list->list_name = $list_name;
+        $list->description = $description;
         $list->save();
 
         return $list;
