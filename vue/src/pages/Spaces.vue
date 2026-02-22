@@ -96,7 +96,22 @@ function reloadSpaces() {
                 list_name: list.list_name,
                 description: list.description
               },
-              tasks: list.tasks
+              tasks: list.tasks.map(task => ({
+                data: {
+                  id: task.id,
+                  task_header: task.task_header,
+                  task_content: task.task_content,
+                  parent_id: task.parent_id,
+                },
+                children: task.subtasks.map(subtask => ({
+                  data: {
+                    id: subtask.id,
+                    task_header: subtask.task_header,
+                    task_content: subtask.task_content,
+                    parent_id: subtask.parent_id
+                  }
+                }))
+              }))
             }))
           }))
         }));
@@ -578,7 +593,7 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
             <Button type="button" label="+ Task" @click="openCreateTaskDialog(taskList)" class="p-0! px-1! mr-2!"></Button>
           </div>
 
-          <div class="task-table">
+          <!--<div class="task-table">
             <div class="task-row header">
               <div class="col-name">Name</div>
               <div class="col-due">Due date</div>
@@ -590,7 +605,10 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
               <div class="col-due"></div>
               <div class="col-priority"></div>
             </div>
-          </div>
+          </div>-->
+          <TreeTable :value="taskList.tasks" tableStyle="min-width: 50rem">
+            <Column field="task_header" header="Name" expander style="width: 34%"></Column>
+          </TreeTable>
         </div>
       </div>
     </div>
