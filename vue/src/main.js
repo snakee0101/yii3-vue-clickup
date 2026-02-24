@@ -19,11 +19,12 @@ import Tree from 'primevue/tree';
 import Textarea from 'primevue/textarea';
 import TreeTable from 'primevue/treetable';
 import Column from 'primevue/column';
+import Select from "primevue/select";
 
 //Unicons icons docs: https://iconscout.com/unicons/thin-line-icons/plus,  https://github.com/antonreshetov/vue-unicons
 //example of styling: <unicon name="plus" fill="#ffffff" stroke="#ffffff"></unicon>
 import Unicon from 'vue-unicons';
-import { uniPlus } from 'vue-unicons/dist/icons.js'
+import { uniPlus, uniTachometerFast } from 'vue-unicons/dist/icons.js'
 
 //axios settings
 import axios from 'axios'
@@ -58,9 +59,10 @@ app.component('Tree', Tree);
 app.component('Textarea', Textarea);
 app.component('TreeTable', TreeTable);
 app.component('Column', Column);
+app.component('Select', Select);
 
 //Unicons
-Unicon.add([uniPlus]);
+Unicon.add([uniPlus, uniTachometerFast]);
 app.use(Unicon,{
     height: 16,
     width: 16

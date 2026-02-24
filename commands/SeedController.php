@@ -111,10 +111,20 @@ class SeedController extends Controller
                 $task->list_id = $list->id;
                 $task->task_header = $faker->sentence;
                 $task->task_content = $faker->paragraph;
+                $task->priority = $faker->numberBetween(1, 4); //task with priority
                 $task->save(false);
 
                 $tasks[] = $task;
             }
+
+            $task = new \app\models\Task();
+            $task->list_id = $list->id;
+            $task->task_header = $faker->sentence;
+            $task->task_content = $faker->paragraph;
+            $task->priority = null; //task without priority
+            $task->save(false);
+
+            $tasks[] = $task;
         }
 
         echo "Seeding tasks..." . "\n";
@@ -136,10 +146,21 @@ class SeedController extends Controller
                 $subtask->task_header = $faker->sentence;
                 $subtask->task_content = $faker->paragraph;
                 $subtask->parent_id = $task->id;
+                $subtask->priority = $faker->numberBetween(1, 4); //subtask with priority
                 $subtask->save(false);
 
                 $subtasks[] = $subtask;
             }
+
+            $subtask = new \app\models\Task();
+            $subtask->list_id = $task->list_id;
+            $subtask->task_header = $faker->sentence;
+            $subtask->task_content = $faker->paragraph;
+            $subtask->parent_id = $task->id;
+            $subtask->priority = null; //subtask without priority
+            $subtask->save(false);
+
+            $subtasks[] = $subtask;
         }
 
         echo "Seeding subtasks..." . "\n";

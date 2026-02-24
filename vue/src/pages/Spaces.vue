@@ -1,6 +1,6 @@
 <script setup>
 import {ref, reactive, computed, watch} from "vue";
-
+import Priorities from "@/utilities/priority.js";
 import {useToast} from 'primevue/usetoast';
 
 const toast = useToast();
@@ -103,7 +103,8 @@ function reloadSpaces() {
                   task_header: task.task_header,
                   task_content: task.task_content,
                   parent_id: task.parent_id,
-                  list_id: task.list_id
+                  list_id: task.list_id,
+                  priority: task.priority
                 },
                 children: task.subtasks.map(subtask => ({
                   key: 'task-' + subtask.id,
@@ -112,7 +113,8 @@ function reloadSpaces() {
                     task_header: subtask.task_header,
                     task_content: subtask.task_content,
                     parent_id: subtask.parent_id,
-                    list_id: subtask.list_id
+                    list_id: subtask.list_id,
+                    priority: subtask.priority
                   }
                 }))
               }))
@@ -678,6 +680,28 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
             <Column header="Actions" style="width: 20%">
               <template #body="slotProps">
                 <Button type="button" label="+ SubTask" @click="openCreateTaskDialog(taskList, slotProps.node.data.id)" class="p-0! px-1! mr-2!" v-if="slotProps.node.data.parent_id == null"></Button>
+              </template>
+            </Column>
+            <Column header="Priority" style="width: 20%">
+              <template #body="slotProps">
+                <Select v-model="slotProps.node.data.priority" :options="Priorities.values" optionLabel="label" optionValue="value" class="w-full md:w-56">
+                  <template #value="slotProps">
+                    <div v-if="slotProps.value" class="flex items-center">
+                      <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByValue(slotProps.value).color"></unicon>
+                      <p class="ml-2!">{{ Priorities.findByValue(slotProps.value).label }}</p>
+                    </div>
+                    <span v-else class="flex">
+                      <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByLabel('Clear').color"></unicon>
+                      <p class="ml-2!">Clear</p>
+                    </span>
+                  </template>
+                  <template #option="slotProps">
+                    <div class="flex items-center">
+                      <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
+                      <p class="ml-2!">{{ slotProps.option.label }}</p>
+                    </div>
+                  </template>
+                </Select>
               </template>
             </Column>
           </TreeTable>
