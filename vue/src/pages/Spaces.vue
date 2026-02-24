@@ -2,6 +2,7 @@
 import {ref, reactive, computed, watch} from "vue";
 import Priorities from "@/utilities/priority.js";
 import {useToast} from 'primevue/usetoast';
+import priority from "@/utilities/priority.js";
 
 const toast = useToast();
 
@@ -401,7 +402,8 @@ function editList() {
 let editTaskForm = reactive({
   task_header: '',
   task_content: '',
-  task_id: null
+  task_id: null,
+  priority: null
 });
 
 let editTaskDialogVisible = ref(false);
@@ -418,6 +420,7 @@ function openEditTaskDialog(task_id) {
             editTaskForm.task_header = task.data.task_header;
             editTaskForm.task_content = task.data.task_content;
             editTaskForm.task_id = task_id;
+            editTaskForm.priority = task.data.priority;
           }
 
           //search for subtasks
@@ -426,6 +429,7 @@ function openEditTaskDialog(task_id) {
               editTaskForm.task_header = subtask.data.task_header;
               editTaskForm.task_content = subtask.data.task_content;
               editTaskForm.task_id = task_id;
+              editTaskForm.priority = subtask.data.priority;
             }
           });
         })
@@ -445,6 +449,7 @@ function editTask() {
 
         editTaskForm.task_header = '';
         editTaskForm.task_content = '';
+        editTaskForm.priority = null;
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task changed', life: 3000});
         reloadSpaces();
@@ -452,6 +457,16 @@ function editTask() {
       .catch((error) => {
         editTaskErrors.value = error.response.data.errors;
       });
+}
+
+//change priority
+function updateTaskPriority(task, priority)
+{
+  axios.put('http://localhost:8081/tasks/' + task.id, {
+    'task_header': task.task_header,
+    'task_content': task.task_content,
+    'priority': priority
+  });
 }
 
 watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
@@ -684,7 +699,7 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
             </Column>
             <Column header="Priority" style="width: 20%">
               <template #body="slotProps">
-                <Select v-model="slotProps.node.data.priority" :options="Priorities.values" optionLabel="label" optionValue="value" class="w-full md:w-56">
+                <Select v-model="slotProps.node.data.priority" @change="() => updateTaskPriority(slotProps.node.data, slotProps.node.data.priority)" :options="Priorities.values" optionLabel="label" optionValue="value" class="w-full md:w-56">
                   <template #value="slotProps">
                     <div v-if="slotProps.value" class="flex items-center">
                       <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByValue(slotProps.value).color"></unicon>

@@ -65,7 +65,7 @@ class TaskController extends ActiveController
 
     public function actionUpdate($id)
     {
-        ['task_header' => $task_header, 'task_content' => $task_content] = Yii::$app->request->post();
+        ['task_header' => $task_header, 'task_content' => $task_content, 'priority' => $priority] = Yii::$app->request->post();
 
         $model = new TaskForm();
         $model->task_header = $task_header;
@@ -80,6 +80,7 @@ class TaskController extends ActiveController
         $task = Task::find()->where(['id' => $id])->one();
         $task->task_header = $task_header;
         $task->task_content = $task_content;
+        $task->priority = $priority;
         $task->save();
 
         return $task;
