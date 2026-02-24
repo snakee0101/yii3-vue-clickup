@@ -235,7 +235,8 @@ let createTaskForm = reactive({
   task_header: '',
   task_content: '',
   list_id: null,
-  parent_id: null
+  parent_id: null,
+  priority: null
 });
 
 function openCreateTaskDialog(taskList, parent_id) {
@@ -257,6 +258,7 @@ function createTask() {
         createTaskForm.task_content = '';
         createTaskForm.list_id = null;
         createTaskForm.parent_id = null;
+        createTaskForm.priority = null;
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task created', life: 3000});
         reloadSpaces();
@@ -485,6 +487,27 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
       <p class="text-red-500" v-if="createTaskErrors.task_header">{{ createTaskErrors.task_header[0] }}</p>
       <div class="flex items-center gap-4 mt-4!">
         <Textarea id="task_content" class="flex-auto" autocomplete="off" rows="5" cols="30" v-model="createTaskForm.task_content" placeholder="Task description"/>
+      </div>
+      <div class="flex items-center gap-4 mb-4 mt-4!">
+        <p>Priority</p>
+        <Select v-model="createTaskForm.priority" :options="Priorities.values" optionLabel="label" optionValue="value" class="w-full md:w-56">
+          <template #value="slotProps">
+            <div v-if="slotProps.value" class="flex items-center">
+              <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByValue(slotProps.value).color"></unicon>
+              <p class="ml-2!">{{ Priorities.findByValue(slotProps.value).label }}</p>
+            </div>
+            <span v-else class="flex">
+              <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByLabel('Clear').color"></unicon>
+              <p class="ml-2!">Clear</p>
+            </span>
+          </template>
+          <template #option="slotProps">
+            <div class="flex items-center">
+              <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
+              <p class="ml-2!">{{ slotProps.option.label }}</p>
+            </div>
+          </template>
+        </Select>
       </div>
       <div class="flex justify-end gap-2 mt-4!">
         <Button type="button" label="Cancel" severity="secondary" @click="createTaskDialogVisible = false"></Button>
