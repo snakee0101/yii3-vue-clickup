@@ -97,6 +97,7 @@ function reloadSpaces() {
                 description: list.description
               },
               tasks: list.tasks.map(task => ({
+                key: 'task-' + task.id,
                 data: {
                   id: task.id,
                   task_header: task.task_header,
@@ -105,6 +106,7 @@ function reloadSpaces() {
                   list_id: task.list_id
                 },
                 children: task.subtasks.map(subtask => ({
+                  key: 'task-' + subtask.id,
                   data: {
                     id: subtask.id,
                     task_header: subtask.task_header,
@@ -226,18 +228,20 @@ function createList() {
 const createTaskDialogVisible = ref(false);
 const selectedTaskListId = ref(null);
 
-function openCreateTaskDialog(taskList) {
-  createTaskDialogVisible.value = true;
-  selectedTaskListId.value = taskList.key.split('-')[1];
-
-  console.log('Selected task list:', selectedTaskListId.value);
-}
-
 let createTaskForm = reactive({
   task_header: '',
   task_content: '',
-  list_id: null
+  list_id: null,
+  parent_id: null
 });
+
+function openCreateTaskDialog(taskList, parent_id) {
+  createTaskDialogVisible.value = true;
+  selectedTaskListId.value = taskList.key.split('-')[1];
+
+  createTaskForm.parent_id = parent_id;
+}
+
 const createTaskErrors = ref({});
 
 function createTask() {
@@ -249,6 +253,7 @@ function createTask() {
         createTaskForm.task_header = '';
         createTaskForm.task_content = '';
         createTaskForm.list_id = null;
+        createTaskForm.parent_id = null;
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task created', life: 3000});
         reloadSpaces();
@@ -649,7 +654,6 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
 
         <div class="top-right">
           <input class="search" placeholder="Search Ctrl K"/>
-          <button class="btn-task" @click="testAxios">+ Task</button>
         </div>
       </header>
 
@@ -662,13 +666,18 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
             <div class="section-title">
               {{ taskList.label }}
             </div>
-            <Button type="button" label="+ Task" @click="openCreateTaskDialog(taskList)" class="p-0! px-1! mr-2!"></Button>
+            <Button type="button" label="+ Task" @click="openCreateTaskDialog(taskList, null)" class="p-0! px-1! mr-2!"></Button>
           </div>
 
           <TreeTable :value="taskList.tasks" tableStyle="min-width: 50rem">
-            <Column header="Name" expander style="width: 34%">
+            <Column header="Name" expander style="width: 80%" key="task.data.id">
               <template #body="slotProps">
                 <a href="#" @click.prevent="() => openEditTaskDialog(slotProps.node.data.id)" class="task_link">{{ slotProps.node.data.task_header }}</a>
+              </template>
+            </Column>
+            <Column header="Actions" style="width: 20%">
+              <template #body="slotProps">
+                <Button type="button" label="+ SubTask" @click="openCreateTaskDialog(taskList, slotProps.node.data.id)" class="p-0! px-1! mr-2!" v-if="slotProps.node.data.parent_id == null"></Button>
               </template>
             </Column>
           </TreeTable>
