@@ -4,13 +4,12 @@ namespace app\controllers;
 
 use app\models\Task;
 use app\models\TaskForm;
-use app\models\TaskList;
 use Yii;
 use yii\rest\ActiveController;
 
 class TaskController extends ActiveController
 {
-    public $modelClass = TaskList::class;
+    public $modelClass = Task::class;
 
     public function behaviors()
     {
@@ -36,7 +35,7 @@ class TaskController extends ActiveController
     public function actions()
     {
         $actions = parent::actions();
-        unset($actions['create']);
+        unset($actions['create'], $actions['update']);
         return $actions;
     }
 
@@ -58,6 +57,28 @@ class TaskController extends ActiveController
         $task->task_header = $task_header;
         $task->task_content = $task_content;
         $task->list_id = $list_id;
+        $task->save();
+
+        return $task;
+    }
+
+    public function actionUpdate($id)
+    {
+        ['task_header' => $task_header, 'task_content' => $task_content] = Yii::$app->request->post();
+
+        $model = new TaskForm();
+        $model->task_header = $task_header;
+
+        if ($model->validate() === false) {
+            Yii::$app->response->statusCode = 422;
+
+            return ['errors' => $model->errors];
+        }
+
+        //update model
+        $task = Task::find()->where(['id' => $id])->one();
+        $task->task_header = $task_header;
+        $task->task_content = $task_content;
         $task->save();
 
         return $task;

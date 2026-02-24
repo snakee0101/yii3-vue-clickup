@@ -222,6 +222,11 @@ body {
     border-top: none;
 }
 
+.task_link:hover {
+    color: #5b4fd8;
+    text-decoration: underline;
+}
+
 
 /*auth pages*/
 .auth-container {

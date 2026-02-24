@@ -102,13 +102,15 @@ function reloadSpaces() {
                   task_header: task.task_header,
                   task_content: task.task_content,
                   parent_id: task.parent_id,
+                  list_id: task.list_id
                 },
                 children: task.subtasks.map(subtask => ({
                   data: {
                     id: subtask.id,
                     task_header: subtask.task_header,
                     task_content: subtask.task_content,
-                    parent_id: subtask.parent_id
+                    parent_id: subtask.parent_id,
+                    list_id: subtask.list_id
                   }
                 }))
               }))
@@ -388,6 +390,63 @@ function editList() {
       });
 }
 
+//Edit task dialog
+let editTaskForm = reactive({
+  task_header: '',
+  task_content: '',
+  task_id: null
+});
+
+let editTaskDialogVisible = ref(false);
+let editTaskErrors = ref([]);
+
+function openEditTaskDialog(task_id) {
+  const allSpaces = spaces.value[0].children;
+  allSpaces.map(function (space) {
+    space.children?.map(function (folder) {
+      folder.children?.map(function (list) {
+        list.tasks?.map(function (task) {
+          //search for normal tasks
+          if(task.data.id == task_id) {
+            editTaskForm.task_header = task.data.task_header;
+            editTaskForm.task_content = task.data.task_content;
+            editTaskForm.task_id = task_id;
+          }
+
+          //search for subtasks
+          task.children?.map(function (subtask) {
+            if(subtask.data.id == task_id) {
+              editTaskForm.task_header = subtask.data.task_header;
+              editTaskForm.task_content = subtask.data.task_content;
+              editTaskForm.task_id = task_id;
+            }
+          });
+        })
+      });
+
+    });
+  });
+
+  editTaskDialogVisible.value = true;
+}
+
+function editTask() {
+  axios.put('http://localhost:8081/tasks/' + editTaskForm.task_id, editTaskForm)
+      .then((response) => {
+        editTaskErrors.value = {};
+        editTaskDialogVisible.value = false;
+
+        editTaskForm.task_header = '';
+        editTaskForm.task_content = '';
+
+        toast.add({severity: 'success', summary: 'Success', detail: 'Task changed', life: 3000});
+        reloadSpaces();
+      })
+      .catch((error) => {
+        editTaskErrors.value = error.response.data.errors;
+      });
+}
+
 watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
 </script>
 
@@ -408,6 +467,21 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
       <div class="flex justify-end gap-2 mt-4!">
         <Button type="button" label="Cancel" severity="secondary" @click="createTaskDialogVisible = false"></Button>
         <Button type="button" label="Save" @click="createTask"></Button>
+      </div>
+    </Dialog>
+
+    <!--EDIT TASK DIALOG-->
+    <Dialog v-model:visible="editTaskDialogVisible" modal header="Edit a Task" :style="{ width: '50rem' }">
+      <div class="flex items-center gap-4 mb-4">
+        <InputText id="edit_task_header" class="flex-auto" autocomplete="off" v-model="editTaskForm.task_header" placeholder="Task name"/>
+      </div>
+      <p class="text-red-500" v-if="editTaskErrors.task_header">{{ editTaskErrors.task_header[0] }}</p>
+      <div class="flex items-center gap-4 mt-4!">
+        <Textarea id="edit_task_content" class="flex-auto" autocomplete="off" rows="5" cols="30" v-model="editTaskForm.task_content" placeholder="Task description"/>
+      </div>
+      <div class="flex justify-end gap-2 mt-4!">
+        <Button type="button" label="Cancel" severity="secondary" @click="editTaskDialogVisible = false"></Button>
+        <Button type="button" label="Save" @click="editTask"></Button>
       </div>
     </Dialog>
 
@@ -588,26 +662,15 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
             <div class="section-title">
               {{ taskList.label }}
             </div>
-
-
             <Button type="button" label="+ Task" @click="openCreateTaskDialog(taskList)" class="p-0! px-1! mr-2!"></Button>
           </div>
 
-          <!--<div class="task-table">
-            <div class="task-row header">
-              <div class="col-name">Name</div>
-              <div class="col-due">Due date</div>
-              <div class="col-priority">Priority</div>
-            </div>
-
-            <div class="task-row" v-for="task in taskList.tasks" :key="task.id">
-              <div class="col-name">{{ task.task_header }}</div>
-              <div class="col-due"></div>
-              <div class="col-priority"></div>
-            </div>
-          </div>-->
           <TreeTable :value="taskList.tasks" tableStyle="min-width: 50rem">
-            <Column field="task_header" header="Name" expander style="width: 34%"></Column>
+            <Column header="Name" expander style="width: 34%">
+              <template #body="slotProps">
+                <a href="#" @click.prevent="() => openEditTaskDialog(slotProps.node.data.id)" class="task_link">{{ slotProps.node.data.task_header }}</a>
+              </template>
+            </Column>
           </TreeTable>
         </div>
       </div>
