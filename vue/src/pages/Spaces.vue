@@ -236,7 +236,9 @@ let createTaskForm = reactive({
   task_content: '',
   list_id: null,
   parent_id: null,
-  priority: null
+  priority: null,
+  start_date: null,
+  due_date: null,
 });
 
 function openCreateTaskDialog(taskList, parent_id) {
@@ -247,6 +249,16 @@ function openCreateTaskDialog(taskList, parent_id) {
 }
 
 const createTaskErrors = ref({});
+
+function toLocalDateString(isoString) {
+  const date = new Date(isoString);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
 
 function createTask() {
   axios.post('http://localhost:8081/tasks', {...createTaskForm, list_id: selectedTaskListId.value})
@@ -259,6 +271,8 @@ function createTask() {
         createTaskForm.list_id = null;
         createTaskForm.parent_id = null;
         createTaskForm.priority = null;
+        createTaskForm.start_date = null;
+        createTaskForm.due_date = null;
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task created', life: 3000});
         reloadSpaces();
@@ -509,6 +523,13 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
           </template>
         </Select>
       </div>
+      <div class="flex items-center gap-4 mb-4 mt-4!">
+        <p>Start Date</p>
+        <DatePicker v-model="createTaskForm.start_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd" updateModelType="string" />
+        <p>Due Date</p>
+        <DatePicker v-model="createTaskForm.due_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd" updateModelType="string" />
+      </div>
+      <p class="text-red-500" v-if="createTaskErrors.due_date">{{ createTaskErrors.due_date[0] }}</p>
       <div class="flex justify-end gap-2 mt-4!">
         <Button type="button" label="Cancel" severity="secondary" @click="createTaskDialogVisible = false"></Button>
         <Button type="button" label="Save" @click="createTask"></Button>

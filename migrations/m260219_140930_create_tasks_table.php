@@ -19,6 +19,8 @@ class m260219_140930_create_tasks_table extends Migration
             'task_content' => $this->text(),
             'parent_id' => $this->integer(),
             'priority' => $this->tinyInteger()->unsigned(),
+            'start_date' => $this->date()->null(),
+            'due_date' => $this->date()->null(),
         ]);
 
         $this->addForeignKey('fk-task-list_id', 'tasks', 'list_id', 'lists','id', 'CASCADE', 'CASCADE');

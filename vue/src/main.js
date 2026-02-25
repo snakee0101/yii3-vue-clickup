@@ -9,7 +9,7 @@ import DefaultLayout from './pages/layouts/DefaultLayout.vue'
 //PrimeVue
 //Primevue docs - https://primevue.org/listbox/
 import PrimeVue from 'primevue/config';
-import Aura from '@primeuix/themes/aura';
+import Aura from '@primeuix/themes/nora';
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Dialog from 'primevue/dialog';
@@ -20,6 +20,8 @@ import Textarea from 'primevue/textarea';
 import TreeTable from 'primevue/treetable';
 import Column from 'primevue/column';
 import Select from "primevue/select";
+import DatePicker from 'primevue/datepicker';
+
 
 //Unicons icons docs: https://iconscout.com/unicons/thin-line-icons/plus,  https://github.com/antonreshetov/vue-unicons
 //example of styling: <unicon name="plus" fill="#ffffff" stroke="#ffffff"></unicon>
@@ -60,6 +62,7 @@ app.component('Textarea', Textarea);
 app.component('TreeTable', TreeTable);
 app.component('Column', Column);
 app.component('Select', Select);
+app.component('DatePicker', DatePicker);
 
 //Unicons
 Unicon.add([uniPlus, uniTachometerFast]);
