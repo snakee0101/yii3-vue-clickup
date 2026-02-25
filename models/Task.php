@@ -12,6 +12,7 @@ class Task extends ActiveRecord
     {
         $fields = parent::fields();
         $fields['subtasks'] = 'subtasks';
+        $fields['tags'] = 'tags';
         return $fields;
     }
 
@@ -23,5 +24,11 @@ class Task extends ActiveRecord
     public function getSubtasks()
     {
         return $this->hasMany(Task::class, ['parent_id' => 'id']);
+    }
+
+    public function getTags()
+    {
+        return $this->hasMany(Tag::class, ['id' => 'tag_id'])
+                    ->viaTable('task_tags', ['task_id' => 'id']);
     }
 }

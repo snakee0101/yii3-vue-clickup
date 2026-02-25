@@ -49,7 +49,7 @@ class SpaceController extends ActiveController
     public function actionIndex()
     {
         $full_user_hierarchy = User::find()
-            ->with('spaces.folders.lists.tasks.subtasks')
+            ->with(['spaces.folders.lists.tasks.subtasks', 'spaces.folders.lists.tasks.tags'])
             ->where(['id' => Yii::$app->user->id])
             ->one();
 

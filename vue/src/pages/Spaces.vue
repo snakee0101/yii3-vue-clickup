@@ -105,7 +105,11 @@ function reloadSpaces() {
                   list_id: task.list_id,
                   priority: task.priority,
                   start_date: task.start_date,
-                  due_date: task.due_date
+                  due_date: task.due_date,
+                  tags: task.tags.map(tag => ({
+                    'id': tag.id,
+                    'tag_name': tag.tag_name
+                  }))
                 },
                 children: task.subtasks.map(subtask => ({
                   key: 'task-' + subtask.id,
@@ -117,7 +121,11 @@ function reloadSpaces() {
                     list_id: subtask.list_id,
                     priority: subtask.priority,
                     start_date: subtask.start_date,
-                    due_date: subtask.due_date
+                    due_date: subtask.due_date,
+                    tags: subtask.tags.map(tag => ({
+                      'id': tag.id,
+                      'tag_name': tag.tag_name
+                    }))
                   }
                 }))
               }))
@@ -815,6 +823,13 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
             <Column header="Due Date" style="">
               <template #body="slotProps">
                 <DatePicker v-model="slotProps.node.data.due_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd" updateModelType="string" @update:modelValue="(updated_due_date) => updateDueDate(updated_due_date, slotProps.node.data)"/>
+              </template>
+            </Column>
+            <Column header="Tags" style="">
+              <template #body="slotProps">
+                <div>
+                  <Chip v-for="tag in slotProps.node.data.tags" :label="tag.tag_name" removable class="mr-2! mb-2! px-2! py-1!"/>
+                </div>
               </template>
             </Column>
             <Column header="Actions" style="">

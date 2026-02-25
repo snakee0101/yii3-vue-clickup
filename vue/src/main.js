@@ -21,7 +21,7 @@ import TreeTable from 'primevue/treetable';
 import Column from 'primevue/column';
 import Select from "primevue/select";
 import DatePicker from 'primevue/datepicker';
-
+import Chip from 'primevue/chip';
 
 //Unicons icons docs: https://iconscout.com/unicons/thin-line-icons/plus,  https://github.com/antonreshetov/vue-unicons
 //example of styling: <unicon name="plus" fill="#ffffff" stroke="#ffffff"></unicon>
@@ -63,6 +63,7 @@ app.component('TreeTable', TreeTable);
 app.component('Column', Column);
 app.component('Select', Select);
 app.component('DatePicker', DatePicker);
+app.component('Chip', Chip);
 
 //Unicons
 Unicon.add([uniPlus, uniTachometerFast]);
