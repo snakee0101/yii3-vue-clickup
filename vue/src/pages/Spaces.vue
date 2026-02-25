@@ -14,7 +14,6 @@ let createSpaceForm = reactive({
 const createSpaceErrors = ref({});
 
 
-
 let createFolderDialogVisible = ref(false);
 let createFolderForm = reactive({
   folder_name: '',
@@ -52,10 +51,9 @@ function createSpace() {
 
 //reload spaces
 const spaces = ref([]);
-let selectedTreeItem = ref({ "all": true });
+let selectedTreeItem = ref({"all": true});
 
-function parseTreeItemData(parsedValue)
-{
+function parseTreeItemData(parsedValue) {
   let object_key = Object.keys(parsedValue)[0]; //like "space-1", "folder-2", "list-3", "all". Example: "space-1" -> {type: 'space', id: 1}
 
   return {
@@ -105,7 +103,9 @@ function reloadSpaces() {
                   task_content: task.task_content,
                   parent_id: task.parent_id,
                   list_id: task.list_id,
-                  priority: task.priority
+                  priority: task.priority,
+                  start_date: task.start_date,
+                  due_date: task.due_date
                 },
                 children: task.subtasks.map(subtask => ({
                   key: 'task-' + subtask.id,
@@ -115,7 +115,9 @@ function reloadSpaces() {
                     task_content: subtask.task_content,
                     parent_id: subtask.parent_id,
                     list_id: subtask.list_id,
-                    priority: subtask.priority
+                    priority: subtask.priority,
+                    start_date: subtask.start_date,
+                    due_date: subtask.due_date
                   }
                 }))
               }))
@@ -128,13 +130,13 @@ function reloadSpaces() {
             key: 'all',
             label: 'All Tasks',
             icon: 'pi pi-th-large',
-            data: { type: 'all' },
+            data: {type: 'all'},
             children: spaceNodes
           }
         ];
 
         // 🔥 SET SELECTION AFTER DATA EXISTS
-        selectedTreeItem.value = { all: true };
+        selectedTreeItem.value = {all: true};
 
         // optionally process lists here instead of manual call below
         processSelectedTreeItem(selectedTreeItem.value);
@@ -335,13 +337,13 @@ function openEditFolderDialog() {
 
   const allSpaces = spaces.value[0].children;
   allSpaces.map(function (space) {
-      //find specific folder and get its fields
-      space.children.map(function (folder) {
-        if(folder.key == 'folder-' + folderId) {
-            editFolderForm.folder_name = folder.data.folder_name;
-            editFolderForm.description = folder.data.description;
-        }
-      });
+    //find specific folder and get its fields
+    space.children.map(function (folder) {
+      if (folder.key == 'folder-' + folderId) {
+        editFolderForm.folder_name = folder.data.folder_name;
+        editFolderForm.description = folder.data.description;
+      }
+    });
   });
 
   editFolderDialogVisible.value = true;
@@ -383,7 +385,7 @@ function openEditListDialog() {
     //find specific folder and get its fields
     space.children.map(function (folder) {
       folder.children.map(function (list) {
-        if(list.key == 'list-' + listId) {
+        if (list.key == 'list-' + listId) {
           editListForm.list_name = list.data.list_name;
           editListForm.description = list.data.description;
         }
@@ -432,7 +434,7 @@ function openEditTaskDialog(task_id) {
       folder.children?.map(function (list) {
         list.tasks?.map(function (task) {
           //search for normal tasks
-          if(task.data.id == task_id) {
+          if (task.data.id == task_id) {
             editTaskForm.task_header = task.data.task_header;
             editTaskForm.task_content = task.data.task_content;
             editTaskForm.task_id = task_id;
@@ -441,7 +443,7 @@ function openEditTaskDialog(task_id) {
 
           //search for subtasks
           task.children?.map(function (subtask) {
-            if(subtask.data.id == task_id) {
+            if (subtask.data.id == task_id) {
               editTaskForm.task_header = subtask.data.task_header;
               editTaskForm.task_content = subtask.data.task_content;
               editTaskForm.task_id = task_id;
@@ -476,16 +478,43 @@ function editTask() {
 }
 
 //change priority
-function updateTaskPriority(task, priority)
+function updateTaskPriority(task, priority) {
+  axios.put('http://localhost:8081/tasks/' + task.id, {
+    'task_header': task.task_header,
+    'task_content': task.task_content,
+    'priority': priority,
+    'start_date': task.start_date,
+    'due_date': task.due_date
+  });
+}
+
+//update start and due date
+function updateStartDate(updated_date, task)
 {
   axios.put('http://localhost:8081/tasks/' + task.id, {
     'task_header': task.task_header,
     'task_content': task.task_content,
-    'priority': priority
+    'priority': task.priority,
+    'start_date': updated_date,
+    'due_date': task.due_date
   });
 }
 
-watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
+function updateDueDate(updated_due_date, task)
+{
+  axios.put('http://localhost:8081/tasks/' + task.id, {
+    'task_header': task.task_header,
+    'task_content': task.task_content,
+    'priority': task.priority,
+    'start_date': task.start_date,
+    'due_date': updated_due_date
+  }).catch((error) => {
+    toast.add({severity: 'error', summary: 'Error', detail: error.response.data.errors.due_date[0], life: 3000});
+    task.due_date = null;
+  });
+}
+
+watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
 </script>
 
 <template>
@@ -496,28 +525,34 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
     <!--CREATE TASK DIALOG-->
     <Dialog v-model:visible="createTaskDialogVisible" modal header="Create a Task" :style="{ width: '50rem' }">
       <div class="flex items-center gap-4 mb-4">
-        <InputText id="task_header" class="flex-auto" autocomplete="off" v-model="createTaskForm.task_header" placeholder="Task name"/>
+        <InputText id="task_header" class="flex-auto" autocomplete="off" v-model="createTaskForm.task_header"
+                   placeholder="Task name"/>
       </div>
       <p class="text-red-500" v-if="createTaskErrors.task_header">{{ createTaskErrors.task_header[0] }}</p>
       <div class="flex items-center gap-4 mt-4!">
-        <Textarea id="task_content" class="flex-auto" autocomplete="off" rows="5" cols="30" v-model="createTaskForm.task_content" placeholder="Task description"/>
+        <Textarea id="task_content" class="flex-auto" autocomplete="off" rows="5" cols="30"
+                  v-model="createTaskForm.task_content" placeholder="Task description"/>
       </div>
       <div class="flex items-center gap-4 mb-4 mt-4!">
         <p>Priority</p>
-        <Select v-model="createTaskForm.priority" :options="Priorities.values" optionLabel="label" optionValue="value" class="w-full md:w-56">
+        <Select v-model="createTaskForm.priority" :options="Priorities.values" optionLabel="label" optionValue="value"
+                class="w-full md:w-56">
           <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-center">
-              <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByValue(slotProps.value).color"></unicon>
+              <unicon name="tachometer-fast" width="20" height="20"
+                      :fill="Priorities.findByValue(slotProps.value).color"></unicon>
               <p class="ml-2!">{{ Priorities.findByValue(slotProps.value).label }}</p>
             </div>
             <span v-else class="flex">
-              <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByLabel('Clear').color"></unicon>
+              <unicon name="tachometer-fast" width="20" height="20"
+                      :fill="Priorities.findByLabel('Clear').color"></unicon>
               <p class="ml-2!">Clear</p>
             </span>
           </template>
           <template #option="slotProps">
             <div class="flex items-center">
-              <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
+              <unicon name="tachometer-fast" width="20" height="20"
+                      :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
               <p class="ml-2!">{{ slotProps.option.label }}</p>
             </div>
           </template>
@@ -525,9 +560,11 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
       </div>
       <div class="flex items-center gap-4 mb-4 mt-4!">
         <p>Start Date</p>
-        <DatePicker v-model="createTaskForm.start_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd" updateModelType="string" />
+        <DatePicker v-model="createTaskForm.start_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd"
+                    updateModelType="string"/>
         <p>Due Date</p>
-        <DatePicker v-model="createTaskForm.due_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd" updateModelType="string" />
+        <DatePicker v-model="createTaskForm.due_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd"
+                    updateModelType="string"/>
       </div>
       <p class="text-red-500" v-if="createTaskErrors.due_date">{{ createTaskErrors.due_date[0] }}</p>
       <div class="flex justify-end gap-2 mt-4!">
@@ -539,11 +576,13 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
     <!--EDIT TASK DIALOG-->
     <Dialog v-model:visible="editTaskDialogVisible" modal header="Edit a Task" :style="{ width: '50rem' }">
       <div class="flex items-center gap-4 mb-4">
-        <InputText id="edit_task_header" class="flex-auto" autocomplete="off" v-model="editTaskForm.task_header" placeholder="Task name"/>
+        <InputText id="edit_task_header" class="flex-auto" autocomplete="off" v-model="editTaskForm.task_header"
+                   placeholder="Task name"/>
       </div>
       <p class="text-red-500" v-if="editTaskErrors.task_header">{{ editTaskErrors.task_header[0] }}</p>
       <div class="flex items-center gap-4 mt-4!">
-        <Textarea id="edit_task_content" class="flex-auto" autocomplete="off" rows="5" cols="30" v-model="editTaskForm.task_content" placeholder="Task description"/>
+        <Textarea id="edit_task_content" class="flex-auto" autocomplete="off" rows="5" cols="30"
+                  v-model="editTaskForm.task_content" placeholder="Task description"/>
       </div>
       <div class="flex justify-end gap-2 mt-4!">
         <Button type="button" label="Cancel" severity="secondary" @click="editTaskDialogVisible = false"></Button>
@@ -594,7 +633,8 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
       <p class="text-red-500" v-if="editFolderErrors.folder_name">{{ editFolderErrors.folder_name[0] }}</p>
       <div class="flex items-center gap-4 mb-8">
         <label for="edit_folder_description" class="font-semibold w-24">Description</label>
-        <InputText id="edit_folder_description" class="flex-auto" autocomplete="off" v-model="editFolderForm.description"/>
+        <InputText id="edit_folder_description" class="flex-auto" autocomplete="off"
+                   v-model="editFolderForm.description"/>
       </div>
       <div class="flex justify-end gap-2">
         <Button type="button" label="Cancel" severity="secondary" @click="editFolderDialogVisible = false"></Button>
@@ -629,7 +669,8 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
       <p class="text-red-500" v-if="editSpaceErrors.space_name">{{ editSpaceErrors.space_name[0] }}</p>
       <div class="flex items-center gap-4 mb-8">
         <label for="edit_space_description" class="font-semibold w-24">Description</label>
-        <InputText id="edit_space_description" class="flex-auto" autocomplete="off" v-model="editSpaceForm.description"/>
+        <InputText id="edit_space_description" class="flex-auto" autocomplete="off"
+                   v-model="editSpaceForm.description"/>
       </div>
       <div class="flex justify-end gap-2">
         <Button type="button" label="Cancel" severity="secondary" @click="editSpaceDialogVisible = false"></Button>
@@ -677,7 +718,8 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
       <!--Actions-->
       <!--Spaces Actions-->
       <div class="sidebar-section mt-4!" v-if="selectedTreeItemData.type == 'space'">
-        <Button type="button" label="+ Folder" @click="createFolderDialogVisible = true" class="p-0! px-1! mr-2!"></Button>
+        <Button type="button" label="+ Folder" @click="createFolderDialogVisible = true"
+                class="p-0! px-1! mr-2!"></Button>
         <Button type="button" label="Edit" @click="openEditSpaceDialog" class="p-0! px-1! mr-2!"></Button>
       </div>
 
@@ -727,40 +769,58 @@ watch(selectedTreeItem, processSelectedTreeItem, { immediate: true });
             <div class="section-title">
               {{ taskList.label }}
             </div>
-            <Button type="button" label="+ Task" @click="openCreateTaskDialog(taskList, null)" class="p-0! px-1! mr-2!"></Button>
+            <Button type="button" label="+ Task" @click="openCreateTaskDialog(taskList, null)"
+                    class="p-0! px-1! mr-2!"></Button>
           </div>
 
           <TreeTable :value="taskList.tasks" tableStyle="min-width: 50rem">
-            <Column header="Name" expander style="width: 80%" key="task.data.id">
+            <Column header="Name" expander style="" key="task.data.id">
               <template #body="slotProps">
-                <a href="#" @click.prevent="() => openEditTaskDialog(slotProps.node.data.id)" class="task_link">{{ slotProps.node.data.task_header }}</a>
+                <a href="#" @click.prevent="() => openEditTaskDialog(slotProps.node.data.id)"
+                   class="task_link">{{ slotProps.node.data.task_header }}</a>
               </template>
             </Column>
-            <Column header="Actions" style="width: 20%">
+            <Column header="Priority" style="">
               <template #body="slotProps">
-                <Button type="button" label="+ SubTask" @click="openCreateTaskDialog(taskList, slotProps.node.data.id)" class="p-0! px-1! mr-2!" v-if="slotProps.node.data.parent_id == null"></Button>
-              </template>
-            </Column>
-            <Column header="Priority" style="width: 20%">
-              <template #body="slotProps">
-                <Select v-model="slotProps.node.data.priority" @change="() => updateTaskPriority(slotProps.node.data, slotProps.node.data.priority)" :options="Priorities.values" optionLabel="label" optionValue="value" class="w-full md:w-56">
+                <Select v-model="slotProps.node.data.priority"
+                        @change="() => updateTaskPriority(slotProps.node.data, slotProps.node.data.priority)"
+                        :options="Priorities.values" optionLabel="label" optionValue="value" class="w-full md:w-56">
                   <template #value="slotProps">
                     <div v-if="slotProps.value" class="flex items-center">
-                      <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByValue(slotProps.value).color"></unicon>
+                      <unicon name="tachometer-fast" width="20" height="20"
+                              :fill="Priorities.findByValue(slotProps.value).color"></unicon>
                       <p class="ml-2!">{{ Priorities.findByValue(slotProps.value).label }}</p>
                     </div>
                     <span v-else class="flex">
-                      <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByLabel('Clear').color"></unicon>
+                      <unicon name="tachometer-fast" width="20" height="20"
+                              :fill="Priorities.findByLabel('Clear').color"></unicon>
                       <p class="ml-2!">Clear</p>
                     </span>
                   </template>
                   <template #option="slotProps">
                     <div class="flex items-center">
-                      <unicon name="tachometer-fast" width="20" height="20" :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
+                      <unicon name="tachometer-fast" width="20" height="20"
+                              :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
                       <p class="ml-2!">{{ slotProps.option.label }}</p>
                     </div>
                   </template>
                 </Select>
+              </template>
+            </Column>
+            <Column header="Start Date" style="">
+              <template #body="slotProps">
+                <DatePicker v-model="slotProps.node.data.start_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd" updateModelType="string" @update:modelValue="(updated_date) => updateStartDate(updated_date, slotProps.node.data)"/>
+              </template>
+            </Column>
+            <Column header="Due Date" style="">
+              <template #body="slotProps">
+                <DatePicker v-model="slotProps.node.data.due_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd" updateModelType="string" @update:modelValue="(updated_due_date) => updateDueDate(updated_due_date, slotProps.node.data)"/>
+              </template>
+            </Column>
+            <Column header="Actions" style="">
+              <template #body="slotProps">
+                <Button type="button" label="+ SubTask" @click="openCreateTaskDialog(taskList, slotProps.node.data.id)"
+                        class="p-0! px-1! mr-2!" v-if="slotProps.node.data.parent_id == null"></Button>
               </template>
             </Column>
           </TreeTable>
