@@ -54,6 +54,14 @@ $config = [
                     'class' => 'yii\rest\UrlRule',
                     'controller' => ['space', 'folder', 'task-list', 'task'],
                 ],
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => ['tag'],
+                    'extraPatterns' => [
+                        'POST detach' => 'detach',
+                        'OPTIONS detach' => 'options',
+                    ],
+                ]
             ],
         ],
     ],

@@ -522,6 +522,14 @@ function updateDueDate(updated_due_date, task)
   });
 }
 
+function detachTag(task_id, tag_id)
+{
+  axios.post('http://localhost:8081/tags/detach', {
+    'task_id': task_id,
+    'tag_id': tag_id
+  });
+}
+
 watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
 </script>
 
@@ -828,7 +836,7 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
             <Column header="Tags" style="">
               <template #body="slotProps">
                 <div>
-                  <Chip v-for="tag in slotProps.node.data.tags" :label="tag.tag_name" removable class="mr-2! mb-2! px-2! py-1!"/>
+                  <Chip v-for="tag in slotProps.node.data.tags" :label="tag.tag_name" removable class="mr-2! mb-2! px-2! py-1!" @remove="detachTag(slotProps.node.data.id, tag.id)"/>
                 </div>
               </template>
             </Column>
