@@ -5,6 +5,8 @@ import {useToast} from 'primevue/usetoast';
 import priority from "@/utilities/priority.js";
 
 const toast = useToast();
+let all_tags_list = reactive([]);
+
 
 let createSpaceDialogVisible = ref(false);
 let createSpaceForm = reactive({
@@ -249,6 +251,7 @@ let createTaskForm = reactive({
   priority: null,
   start_date: null,
   due_date: null,
+  tags: []
 });
 
 function openCreateTaskDialog(taskList, parent_id) {
@@ -283,9 +286,14 @@ function createTask() {
         createTaskForm.priority = null;
         createTaskForm.start_date = null;
         createTaskForm.due_date = null;
+        createTaskForm.tags = [];
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task created', life: 3000});
         reloadSpaces();
+
+        //reload tags
+        axios.get('http://localhost:8081/tags')
+            .then((response) => all_tags_list = response.data);
       })
       .catch((error) => {
         createTaskErrors.value = error.response.data.errors;
@@ -530,6 +538,33 @@ function detachTag(task_id, tag_id)
   });
 }
 
+//Tags search
+let create_task_autocompleted_tag_name = ref('');
+let tag_suggestions = reactive([]);
+
+axios.get('http://localhost:8081/tags')
+    .then((response) => all_tags_list = response.data);
+
+//Tags processing
+function add_tags_to_created_task()
+{
+  if(createTaskForm.tags.find(t => t.tag_name === create_task_autocompleted_tag_name.value) !== undefined) {
+    toast.add({severity: 'error', summary: 'Error', detail: "Can't add duplicate tag", life: 3000});
+    return;
+  }
+
+  let tag_id = all_tags_list.find(tag => tag.tag_name === create_task_autocompleted_tag_name.value)?.id ?? null;
+  createTaskForm.tags.push({'tag_name': create_task_autocompleted_tag_name.value, 'id': tag_id});
+
+  create_task_autocompleted_tag_name.value = '';
+}
+
+function search_tags(event)
+{
+  tag_suggestions = all_tags_list.filter(tag => tag.tag_name.toLowerCase().includes(event.query.toLowerCase()))
+      .map(tag => tag.tag_name);
+}
+
 watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
 </script>
 
@@ -581,6 +616,16 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
         <p>Due Date</p>
         <DatePicker v-model="createTaskForm.due_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd"
                     updateModelType="string"/>
+      </div>
+      <div class="mt-4!">
+        <p><b>Tags</b></p>
+        <div class="flex items-stretch gap-2 my-2!">
+          <AutoComplete v-model="create_task_autocompleted_tag_name" :suggestions="tag_suggestions" @complete="search_tags"/>
+          <Button type="button" label="Add" @click="add_tags_to_created_task" class="px-4!"></Button>
+        </div>
+        <div>
+          <Chip v-for="new_task_tag in createTaskForm.tags" :key="new_task_tag" :label="new_task_tag.tag_name" removable class="mr-2! mb-2! px-2! py-1!" @remove="() => createTaskForm.tags.splice(createTaskForm.tags.indexOf(new_task_tag), 1)"/>
+        </div>
       </div>
       <p class="text-red-500" v-if="createTaskErrors.due_date">{{ createTaskErrors.due_date[0] }}</p>
       <div class="flex justify-end gap-2 mt-4!">

@@ -22,6 +22,7 @@ import Column from 'primevue/column';
 import Select from "primevue/select";
 import DatePicker from 'primevue/datepicker';
 import Chip from 'primevue/chip';
+import AutoComplete from 'primevue/autocomplete';
 
 //Unicons icons docs: https://iconscout.com/unicons/thin-line-icons/plus,  https://github.com/antonreshetov/vue-unicons
 //example of styling: <unicon name="plus" fill="#ffffff" stroke="#ffffff"></unicon>
@@ -64,6 +65,7 @@ app.component('Column', Column);
 app.component('Select', Select);
 app.component('DatePicker', DatePicker);
 app.component('Chip', Chip);
+app.component('AutoComplete', AutoComplete);
 
 //Unicons
 Unicon.add([uniPlus, uniTachometerFast]);

@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\Tag;
 use app\models\Task;
 use app\models\TaskForm;
 use Yii;
@@ -41,7 +42,7 @@ class TaskController extends ActiveController
 
     public function actionCreate()
     {
-        ['task_header' => $task_header, 'task_content' => $task_content, 'list_id' => $list_id, 'parent_id' => $parent_id, 'priority' => $priority, 'due_date' => $due_date, 'start_date' => $start_date] = Yii::$app->request->post();
+        ['task_header' => $task_header, 'task_content' => $task_content, 'list_id' => $list_id, 'parent_id' => $parent_id, 'priority' => $priority, 'due_date' => $due_date, 'start_date' => $start_date, 'tags' => $tags] = Yii::$app->request->post();
 
         $model = new TaskForm();
         $model->task_header = $task_header;
@@ -64,6 +65,23 @@ class TaskController extends ActiveController
         $task->due_date = $due_date;
         $task->start_date = $start_date;
         $task->save();
+
+        //process associated tags
+        foreach ($tags as $tag) {
+            if(is_null($tag['id'])) {
+                //if tag doesn't exist, create it and associate with a note
+                $newTag = new Tag();
+                $newTag->tag_name = $tag['tag_name'];
+                $newTag->user_id = Yii::$app->user->id;
+                $newTag->save();
+
+                $task->link('tags', $newTag);
+            } else {
+                //otherwise associate existing tag
+                $task->link('tags', Tag::findOne($tag['id']));
+            }
+
+        }
 
         return $task;
     }
