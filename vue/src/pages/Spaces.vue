@@ -434,43 +434,29 @@ function editList() {
 
 //Edit task dialog
 let editTaskForm = reactive({
+  task_id: null,
   task_header: '',
   task_content: '',
-  task_id: null,
-  priority: null
+  priority: null,
+  start_date: null,
+  due_date: null,
+  tags: []
 });
 
 let editTaskDialogVisible = ref(false);
 let editTaskErrors = ref([]);
 
 function openEditTaskDialog(task_id) {
-  const allSpaces = spaces.value[0].children;
-  allSpaces.map(function (space) {
-    space.children?.map(function (folder) {
-      folder.children?.map(function (list) {
-        list.tasks?.map(function (task) {
-          //search for normal tasks
-          if (task.data.id == task_id) {
-            editTaskForm.task_header = task.data.task_header;
-            editTaskForm.task_content = task.data.task_content;
-            editTaskForm.task_id = task_id;
-            editTaskForm.priority = task.data.priority;
-          }
-
-          //search for subtasks
-          task.children?.map(function (subtask) {
-            if (subtask.data.id == task_id) {
-              editTaskForm.task_header = subtask.data.task_header;
-              editTaskForm.task_content = subtask.data.task_content;
-              editTaskForm.task_id = task_id;
-              editTaskForm.priority = subtask.data.priority;
-            }
-          });
-        })
-      });
-
-    });
-  });
+  axios.get('http://localhost:8081/tasks/' + task_id)
+  .then((response) => {
+    editTaskForm.task_id = response.data.id;
+    editTaskForm.task_header = response.data.task_header;
+    editTaskForm.task_content = response.data.task_content;
+    editTaskForm.priority = response.data.priority;
+    editTaskForm.start_date = response.data.start_date;
+    editTaskForm.due_date = response.data.due_date;
+    editTaskForm.tags = response.data.tags;
+  })
 
   editTaskDialogVisible.value = true;
 }
@@ -484,6 +470,9 @@ function editTask() {
         editTaskForm.task_header = '';
         editTaskForm.task_content = '';
         editTaskForm.priority = null;
+        editTaskForm.start_date = null;
+        editTaskForm.due_date = null;
+        editTaskForm.tags = [];
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task changed', life: 3000});
         reloadSpaces();
@@ -500,7 +489,8 @@ function updateTaskPriority(task, priority) {
     'task_content': task.task_content,
     'priority': priority,
     'start_date': task.start_date,
-    'due_date': task.due_date
+    'due_date': task.due_date,
+    'tags': task.tags
   });
 }
 
@@ -512,7 +502,8 @@ function updateStartDate(updated_date, task)
     'task_content': task.task_content,
     'priority': task.priority,
     'start_date': updated_date,
-    'due_date': task.due_date
+    'due_date': task.due_date,
+    'tags': task.tags
   });
 }
 
@@ -523,7 +514,8 @@ function updateDueDate(updated_due_date, task)
     'task_content': task.task_content,
     'priority': task.priority,
     'start_date': task.start_date,
-    'due_date': updated_due_date
+    'due_date': updated_due_date,
+    'tags': task.tags
   }).catch((error) => {
     toast.add({severity: 'error', summary: 'Error', detail: error.response.data.errors.due_date[0], life: 3000});
     task.due_date = null;
@@ -555,6 +547,19 @@ function add_tags_to_created_task()
 
   let tag_id = all_tags_list.find(tag => tag.tag_name === create_task_autocompleted_tag_name.value)?.id ?? null;
   createTaskForm.tags.push({'tag_name': create_task_autocompleted_tag_name.value, 'id': tag_id});
+
+  create_task_autocompleted_tag_name.value = '';
+}
+
+function add_tags_to_edited_task()
+{
+  if(editTaskForm.tags.find(t => t.tag_name === create_task_autocompleted_tag_name.value) !== undefined) {
+    toast.add({severity: 'error', summary: 'Error', detail: "Can't add duplicate tag", life: 3000});
+    return;
+  }
+
+  let tag_id = all_tags_list.find(tag => tag.tag_name === create_task_autocompleted_tag_name.value)?.id ?? null;
+  editTaskForm.tags.push({'tag_name': create_task_autocompleted_tag_name.value, 'id': tag_id});
 
   create_task_autocompleted_tag_name.value = '';
 }
@@ -644,6 +649,49 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
       <div class="flex items-center gap-4 mt-4!">
         <Textarea id="edit_task_content" class="flex-auto" autocomplete="off" rows="5" cols="30"
                   v-model="editTaskForm.task_content" placeholder="Task description"/>
+      </div>
+      <div class="flex items-center gap-4 mb-4 mt-4!">
+        <p>Priority</p>
+        <Select v-model="editTaskForm.priority" :options="Priorities.values" optionLabel="label" optionValue="value"
+                class="w-full md:w-56">
+          <template #value="slotProps">
+            <div v-if="slotProps.value" class="flex items-center">
+              <unicon name="tachometer-fast" width="20" height="20"
+                      :fill="Priorities.findByValue(slotProps.value).color"></unicon>
+              <p class="ml-2!">{{ Priorities.findByValue(slotProps.value).label }}</p>
+            </div>
+            <span v-else class="flex">
+              <unicon name="tachometer-fast" width="20" height="20"
+                      :fill="Priorities.findByLabel('Clear').color"></unicon>
+              <p class="ml-2!">Clear</p>
+            </span>
+          </template>
+          <template #option="slotProps">
+            <div class="flex items-center">
+              <unicon name="tachometer-fast" width="20" height="20"
+                      :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
+              <p class="ml-2!">{{ slotProps.option.label }}</p>
+            </div>
+          </template>
+        </Select>
+      </div>
+      <div class="flex items-center gap-4 mb-4 mt-4!">
+        <p>Start Date</p>
+        <DatePicker v-model="editTaskForm.start_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd"
+                    updateModelType="string"/>
+        <p>Due Date</p>
+        <DatePicker v-model="editTaskForm.due_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd"
+                    updateModelType="string"/>
+      </div>
+      <div class="mt-4!">
+        <p><b>Tags</b></p>
+        <div class="flex items-stretch gap-2 my-2!">
+          <AutoComplete v-model="create_task_autocompleted_tag_name" :suggestions="tag_suggestions" @complete="search_tags"/>
+          <Button type="button" label="Add" @click="add_tags_to_edited_task" class="px-4!"></Button>
+        </div>
+        <div>
+          <Chip v-for="edited_task_tag in editTaskForm.tags" :key="edited_task_tag.id" :label="edited_task_tag.tag_name" removable class="mr-2! mb-2! px-2! py-1!" @remove="() => editTaskForm.tags.splice(editTaskForm.tags.indexOf(edited_task_tag), 1)"/>
+        </div>
       </div>
       <div class="flex justify-end gap-2 mt-4!">
         <Button type="button" label="Cancel" severity="secondary" @click="editTaskDialogVisible = false"></Button>
