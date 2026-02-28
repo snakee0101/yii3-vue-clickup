@@ -7,6 +7,7 @@ use app\models\Task;
 use app\models\TaskForm;
 use Yii;
 use yii\rest\ActiveController;
+use yii\web\UploadedFile;
 
 class TaskController extends ActiveController
 {
@@ -42,7 +43,16 @@ class TaskController extends ActiveController
 
     public function actionCreate()
     {
-        ['task_header' => $task_header, 'task_content' => $task_content, 'list_id' => $list_id, 'parent_id' => $parent_id, 'priority' => $priority, 'due_date' => $due_date, 'start_date' => $start_date, 'tags' => $tags] = Yii::$app->request->post();
+        $post = Yii::$app->request->post();
+
+        $task_header  = $post['task_header']  ?? null;
+        $task_content = $post['task_content'] ?? null;
+        $list_id      = $post['list_id']      ?? null;
+        $parent_id    = $post['parent_id']    ?? null;
+        $priority     = $post['priority']     ?? null;
+        $due_date     = $post['due_date']     ?? null;
+        $start_date   = $post['start_date']   ?? null;
+        $tags         = $post['tags'] == '[]' ? [] : $post['tags'];
 
         $model = new TaskForm();
         $model->task_header = $task_header;
@@ -83,6 +93,8 @@ class TaskController extends ActiveController
 
         }
 
+        //process attachments
+        $model->uploadAndSaveAttachments($task);
         return $task;
     }
 

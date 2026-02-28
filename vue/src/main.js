@@ -23,6 +23,7 @@ import Select from "primevue/select";
 import DatePicker from 'primevue/datepicker';
 import Chip from 'primevue/chip';
 import AutoComplete from 'primevue/autocomplete';
+import FileUpload from 'primevue/fileupload';
 
 //Unicons icons docs: https://iconscout.com/unicons/thin-line-icons/plus,  https://github.com/antonreshetov/vue-unicons
 //example of styling: <unicon name="plus" fill="#ffffff" stroke="#ffffff"></unicon>
@@ -32,7 +33,6 @@ import { uniPlus, uniTachometerFast } from 'vue-unicons/dist/icons.js'
 //axios settings
 import axios from 'axios'
 if(localStorage.getItem('access_token') !== null) {
-    axios.defaults.headers.common['Content-Type'] = 'application/json';
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('access_token');
 }
 window.axios = axios;
@@ -66,6 +66,7 @@ app.component('Select', Select);
 app.component('DatePicker', DatePicker);
 app.component('Chip', Chip);
 app.component('AutoComplete', AutoComplete);
+app.component('FileUpload', FileUpload);
 
 //Unicons
 Unicon.add([uniPlus, uniTachometerFast]);

@@ -251,7 +251,8 @@ let createTaskForm = reactive({
   priority: null,
   start_date: null,
   due_date: null,
-  tags: []
+  tags: [],
+  attachments: [],
 });
 
 function openCreateTaskDialog(taskList, parent_id) {
@@ -273,8 +274,30 @@ function toLocalDateString(isoString) {
   return `${year}-${month}-${day}`;
 }
 
+function appendIfNotNull(form, field, value)
+{
+  if(value !== null) {
+    form.append(field, value);
+  }
+}
+
 function createTask() {
-  axios.post('http://localhost:8081/tasks', {...createTaskForm, list_id: selectedTaskListId.value})
+  //transform to FormData to be able to send files
+  let createTaskFormData = new FormData();
+  appendIfNotNull(createTaskFormData, 'task_header', createTaskForm.task_header);
+  appendIfNotNull(createTaskFormData, 'task_content', createTaskForm.task_content);
+  appendIfNotNull(createTaskFormData, 'list_id', selectedTaskListId.value);
+  appendIfNotNull(createTaskFormData, 'parent_id', createTaskForm.parent_id);
+  appendIfNotNull(createTaskFormData, 'priority', createTaskForm.priority);
+  appendIfNotNull(createTaskFormData, 'start_date', createTaskForm.start_date);
+  appendIfNotNull(createTaskFormData, 'due_date', createTaskForm.due_date);
+  appendIfNotNull(createTaskFormData, 'tags', JSON.stringify(createTaskForm.tags));
+
+  createTaskForm.attachments.forEach((file, index) => {
+    createTaskFormData.append('attachments[]', file);
+  });
+
+  axios.post('http://localhost:8081/tasks', createTaskFormData)
       .then((response) => {
         createTaskErrors.value = {};
         createTaskDialogVisible.value = false;
@@ -287,6 +310,7 @@ function createTask() {
         createTaskForm.start_date = null;
         createTaskForm.due_date = null;
         createTaskForm.tags = [];
+        createTaskForm.attachments = [];
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task created', life: 3000});
         reloadSpaces();
@@ -570,6 +594,23 @@ function search_tags(event)
       .map(tag => tag.tag_name);
 }
 
+//process attachments
+function addAttachmentsToNewTask(event)
+{
+  event.files.forEach(file => createTaskForm.attachments.push(file));
+}
+
+function clearAttachmentsFromNewTask()
+{
+  createTaskForm.attachments = [];
+}
+
+function removeAttachmentsFromNewTask($event)
+{
+  createTaskForm.attachments.splice(createTaskForm.attachments.indexOf($event.file), 1);
+}
+
+
 watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
 </script>
 
@@ -631,6 +672,10 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
         <div>
           <Chip v-for="new_task_tag in createTaskForm.tags" :key="new_task_tag" :label="new_task_tag.tag_name" removable class="mr-2! mb-2! px-2! py-1!" @remove="() => createTaskForm.tags.splice(createTaskForm.tags.indexOf(new_task_tag), 1)"/>
         </div>
+      </div>
+      <div class="mt-4!">
+        <p><b>Attachments</b></p>
+        <p><FileUpload name="new_task_attachments[]" @select="addAttachmentsToNewTask($event)" @clear="clearAttachmentsFromNewTask" @remove="removeAttachmentsFromNewTask($event)" :multiple="true" :maxFileSize="10000000"></FileUpload></p>
       </div>
       <p class="text-red-500" v-if="createTaskErrors.due_date">{{ createTaskErrors.due_date[0] }}</p>
       <div class="flex justify-end gap-2 mt-4!">
