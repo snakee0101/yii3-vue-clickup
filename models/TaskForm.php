@@ -33,9 +33,9 @@ class TaskForm extends Model
         }
     }
 
-    public function uploadAndSaveAttachments($task)
+    public function uploadAndSaveAttachments($task, $request_key)
     {
-        $this->attachments = UploadedFile::getInstancesByName('attachments');
+        $this->attachments = UploadedFile::getInstancesByName($request_key);
 
         foreach ($this->attachments as $file) {
             $random_filename = $file->baseName . Yii::$app->getSecurity()->generateRandomString(60) . time() . '.' . $file->extension;

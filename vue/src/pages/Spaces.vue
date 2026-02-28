@@ -464,7 +464,9 @@ let editTaskForm = reactive({
   priority: null,
   start_date: null,
   due_date: null,
-  tags: []
+  tags: [],
+  attachments: [],
+  new_attachments: []
 });
 
 let editTaskDialogVisible = ref(false);
@@ -480,13 +482,30 @@ function openEditTaskDialog(task_id) {
     editTaskForm.start_date = response.data.start_date;
     editTaskForm.due_date = response.data.due_date;
     editTaskForm.tags = response.data.tags;
+    editTaskForm.attachments = response.data.attachments;
   })
 
   editTaskDialogVisible.value = true;
 }
 
 function editTask() {
-  axios.put('http://localhost:8081/tasks/' + editTaskForm.task_id, editTaskForm)
+  let editTaskFormData = new FormData();
+  appendIfNotNull(editTaskFormData, 'task_header', editTaskForm.task_header);
+  appendIfNotNull(editTaskFormData, 'task_content', editTaskForm.task_content);
+  appendIfNotNull(editTaskFormData, 'priority', editTaskForm.priority);
+  appendIfNotNull(editTaskFormData, 'start_date', editTaskForm.start_date);
+  appendIfNotNull(editTaskFormData, 'due_date', editTaskForm.due_date);
+  appendIfNotNull(editTaskFormData, 'tags', JSON.stringify(editTaskForm.tags));
+
+  editTaskForm.new_attachments.forEach((file, index) => {
+    editTaskFormData.append('new_attachments[]', file);
+  });
+
+  axios.post('http://localhost:8081/tasks/' + editTaskForm.task_id, editTaskFormData, {
+    headers: {
+      'X-HTTP-Method-Override': 'PUT'
+    }
+  })
       .then((response) => {
         editTaskErrors.value = {};
         editTaskDialogVisible.value = false;
@@ -497,6 +516,8 @@ function editTask() {
         editTaskForm.start_date = null;
         editTaskForm.due_date = null;
         editTaskForm.tags = [];
+        editTaskForm.attachments = [];
+        editTaskForm.new_attachments = [];
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task changed', life: 3000});
         reloadSpaces();
@@ -610,6 +631,22 @@ function removeAttachmentsFromNewTask($event)
   createTaskForm.attachments.splice(createTaskForm.attachments.indexOf($event.file), 1);
 }
 
+let edit_task_attachments = reactive([]);
+
+function addAttachmentsToEditedTask(event)
+{
+  event.files.forEach(file => editTaskForm.new_attachments.push(file));
+}
+
+function clearAttachmentsFromEditedTask()
+{
+  editTaskForm.new_attachments = [];
+}
+
+function removeAttachmentsFromEditedTask($event)
+{
+  editTaskForm.new_attachments.splice(editTaskForm.new_attachments.indexOf($event.file), 1);
+}
 
 watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
 </script>
@@ -737,6 +774,10 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
         <div>
           <Chip v-for="edited_task_tag in editTaskForm.tags" :key="edited_task_tag.id" :label="edited_task_tag.tag_name" removable class="mr-2! mb-2! px-2! py-1!" @remove="() => editTaskForm.tags.splice(editTaskForm.tags.indexOf(edited_task_tag), 1)"/>
         </div>
+      </div>
+      <div class="mt-4!">
+        <p><b>New Attachments</b></p>
+        <p><FileUpload name="edit_task_attachments[]" @select="addAttachmentsToEditedTask($event)" @clear="clearAttachmentsFromEditedTask" @remove="removeAttachmentsFromEditedTask($event)" :multiple="true" :maxFileSize="10000000"></FileUpload></p>
       </div>
       <div class="flex justify-end gap-2 mt-4!">
         <Button type="button" label="Cancel" severity="secondary" @click="editTaskDialogVisible = false"></Button>

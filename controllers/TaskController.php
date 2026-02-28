@@ -94,13 +94,21 @@ class TaskController extends ActiveController
         }
 
         //process attachments
-        $model->uploadAndSaveAttachments($task);
+        $model->uploadAndSaveAttachments($task, 'attachments');
         return $task;
     }
 
     public function actionUpdate($id)
     {
-        ['task_header' => $task_header, 'task_content' => $task_content, 'priority' => $priority, 'due_date' => $due_date, 'start_date' => $start_date, 'tags' => $tags] = Yii::$app->request->post();
+        $task_header  = $_REQUEST['task_header']  ?? null;
+        $task_content = $_REQUEST['task_content'] ?? null;
+        $priority     = $_REQUEST['priority']     ?? null;
+        $due_date     = $_REQUEST['due_date']     ?? null;
+        $start_date   = $_REQUEST['start_date']   ?? null;
+
+        $tags = isset($_REQUEST['tags'])
+            ? json_decode($_REQUEST['tags'], true)
+            : [];
 
         $model = new TaskForm();
         $model->task_header = $task_header;
@@ -139,6 +147,8 @@ class TaskController extends ActiveController
                 $task->link('tags', Tag::findOne($tag['id']));
             }
         }
+
+        $model->uploadAndSaveAttachments($task, 'new_attachments');
 
         return $task;
     }
