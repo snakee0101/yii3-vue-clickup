@@ -14,7 +14,7 @@ class m260227_132758_create_attachments_table extends Migration
     {
         $this->createTable('attachments', [
             'id' => $this->primaryKey(),
-            'task_id' => $this->integer()->unsigned()->notNull(),
+            'task_id' => $this->integer()->notNull(),
             'filename' => $this->string(255)->notNull(),
             'size' => $this->integer()->unsigned()->notNull(), //in bytes
             'file_path' => $this->string(255)->notNull(),
