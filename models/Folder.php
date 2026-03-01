@@ -8,6 +8,7 @@ use yii\db\ActiveRecord;
 class Folder extends ActiveRecord
 {
     //serializer behavior - you need to include relations in serialized output
+    //for test commit
     public function fields()
     {
         $fields = parent::fields();
