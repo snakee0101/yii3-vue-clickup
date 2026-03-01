@@ -52,7 +52,7 @@ class TaskController extends ActiveController
         $priority     = $post['priority']     ?? null;
         $due_date     = $post['due_date']     ?? null;
         $start_date   = $post['start_date']   ?? null;
-        $tags         = $post['tags'] == '[]' ? [] : $post['tags'];
+        $tags         = $post['tags'] == '[]' ? [] : json_decode($post['tags']);
 
         $model = new TaskForm();
         $model->task_header = $task_header;
@@ -78,17 +78,17 @@ class TaskController extends ActiveController
 
         //process associated tags
         foreach ($tags as $tag) {
-            if(is_null($tag['id'])) {
+            if(is_null($tag->id)) {
                 //if tag doesn't exist, create it and associate with a note
                 $newTag = new Tag();
-                $newTag->tag_name = $tag['tag_name'];
+                $newTag->tag_name = $tag->tag_name;
                 $newTag->user_id = Yii::$app->user->id;
                 $newTag->save();
 
                 $task->link('tags', $newTag);
             } else {
                 //otherwise associate existing tag
-                $task->link('tags', Tag::findOne($tag['id']));
+                $task->link('tags', Tag::findOne($tag->id));
             }
 
         }
