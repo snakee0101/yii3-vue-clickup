@@ -804,9 +804,14 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
           <Column field="created_at" header="Import date"></Column>
           <Column header="Actions">
             <template #body="slotProps">
-              <a href="#" @click.prevent="() => deleteAttachment(slotProps.data)">
-                <unicon name="trash" fill="#be0000"></unicon>
-              </a>
+              <div class="flex gap-2">
+                <a href="#" @click.prevent="() => deleteAttachment(slotProps.data)">
+                  <unicon name="trash" fill="#be0000" height="24" width="24"></unicon>
+                </a>
+                <a :href="'http://localhost:8081/download?attachment_id=' + slotProps.data.id" download target="_blank">
+                  <unicon name="download-alt" icon-style="solid" fill="#0048ff" height="24" width="24"></unicon>
+                </a>
+              </div>
             </template>
           </Column>
         </DataTable>

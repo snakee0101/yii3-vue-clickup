@@ -32,7 +32,7 @@ import Row from 'primevue/row';                   // optional
 //Unicons icons docs: https://iconscout.com/unicons/thin-line-icons/plus,  https://github.com/antonreshetov/vue-unicons
 //example of styling: <unicon name="plus" fill="#ffffff" stroke="#ffffff"></unicon>
 import Unicon from 'vue-unicons';
-import { uniPlus, uniTachometerFast, uniTrash } from 'vue-unicons/dist/icons.js'
+import { uniPlus, uniTachometerFast, uniTrash, uniDownloadAltSolid } from 'vue-unicons/dist/icons.js'
 
 //axios settings
 import axios from 'axios'
@@ -77,7 +77,7 @@ app.component('Row', Row);
 
 
 //Unicons
-Unicon.add([uniPlus, uniTachometerFast, uniTrash]);
+Unicon.add([uniPlus, uniTachometerFast, uniTrash, uniDownloadAltSolid]);
 app.use(Unicon,{
     height: 16,
     width: 16
