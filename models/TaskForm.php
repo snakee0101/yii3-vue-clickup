@@ -51,4 +51,20 @@ class TaskForm extends Model
             $attachment->save();
         }
     }
+
+    public function deleteMissingAttachments(Task $task, array $attachments)
+    {
+        $attachment_ids = array_column($attachments, 'id');
+
+        $deleted_attachments = Attachment::find()
+            ->where(['not in', 'id', $attachment_ids])
+            ->andWhere(['task_id' => $task->id])
+            ->all();
+
+        foreach ($deleted_attachments as $attachment) {
+            unlink($attachment->file_path);
+
+            $task->unlink('attachments', $attachment, true);
+        }
+    }
 }

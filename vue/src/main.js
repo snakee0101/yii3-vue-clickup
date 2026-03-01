@@ -25,10 +25,14 @@ import Chip from 'primevue/chip';
 import AutoComplete from 'primevue/autocomplete';
 import FileUpload from 'primevue/fileupload';
 
+import DataTable from 'primevue/datatable';
+import ColumnGroup from 'primevue/columngroup';   // optional
+import Row from 'primevue/row';                   // optional
+
 //Unicons icons docs: https://iconscout.com/unicons/thin-line-icons/plus,  https://github.com/antonreshetov/vue-unicons
 //example of styling: <unicon name="plus" fill="#ffffff" stroke="#ffffff"></unicon>
 import Unicon from 'vue-unicons';
-import { uniPlus, uniTachometerFast } from 'vue-unicons/dist/icons.js'
+import { uniPlus, uniTachometerFast, uniTrash } from 'vue-unicons/dist/icons.js'
 
 //axios settings
 import axios from 'axios'
@@ -67,9 +71,13 @@ app.component('DatePicker', DatePicker);
 app.component('Chip', Chip);
 app.component('AutoComplete', AutoComplete);
 app.component('FileUpload', FileUpload);
+app.component('DataTable', DataTable);
+app.component('ColumnGroup', ColumnGroup);
+app.component('Row', Row);
+
 
 //Unicons
-Unicon.add([uniPlus, uniTachometerFast]);
+Unicon.add([uniPlus, uniTachometerFast, uniTrash]);
 app.use(Unicon,{
     height: 16,
     width: 16

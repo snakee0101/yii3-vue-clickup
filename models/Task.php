@@ -13,6 +13,7 @@ class Task extends ActiveRecord
         $fields = parent::fields();
         $fields['subtasks'] = 'subtasks';
         $fields['tags'] = 'tags';
+        $fields['attachments'] = 'attachments';
         return $fields;
     }
 
@@ -30,5 +31,10 @@ class Task extends ActiveRecord
     {
         return $this->hasMany(Tag::class, ['id' => 'tag_id'])
                     ->viaTable('task_tags', ['task_id' => 'id']);
+    }
+
+    public function getAttachments()
+    {
+        return $this->hasMany(Attachment::class, ['task_id' => 'id'])->inverseOf('task');
     }
 }

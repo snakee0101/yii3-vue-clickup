@@ -105,6 +105,7 @@ class TaskController extends ActiveController
         $priority     = $_REQUEST['priority']     ?? null;
         $due_date     = $_REQUEST['due_date']     ?? null;
         $start_date   = $_REQUEST['start_date']   ?? null;
+        $attachments  = isset($_REQUEST['attachments']) ? json_decode($_REQUEST['attachments']) : [];
 
         $tags = isset($_REQUEST['tags'])
             ? json_decode($_REQUEST['tags'], true)
@@ -149,6 +150,7 @@ class TaskController extends ActiveController
         }
 
         $model->uploadAndSaveAttachments($task, 'new_attachments');
+        $model->deleteMissingAttachments($task, $attachments);
 
         return $task;
     }

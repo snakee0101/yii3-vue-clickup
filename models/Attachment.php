@@ -11,4 +11,9 @@ class Attachment extends ActiveRecord
     {
         return 'attachments';
     }
+
+    public function getTask()
+    {
+        return $this->hasOne(Task::class, ['id' => 'task_id']);
+    }
 }

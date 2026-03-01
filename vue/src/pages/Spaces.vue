@@ -7,6 +7,17 @@ import priority from "@/utilities/priority.js";
 const toast = useToast();
 let all_tags_list = reactive([]);
 
+function formatBytes(bytes) {
+  if (bytes < 1024) {
+    return bytes + ' B';
+  }
+
+  if (bytes < 1024 * 1024) {
+    return (bytes / 1024).toFixed(1).replace(/\.0$/, '') + ' kB';
+  }
+
+  return (bytes / (1024 * 1024)).toFixed(1).replace(/\.0$/, '') + ' MB';
+}
 
 let createSpaceDialogVisible = ref(false);
 let createSpaceForm = reactive({
@@ -496,6 +507,7 @@ function editTask() {
   appendIfNotNull(editTaskFormData, 'start_date', editTaskForm.start_date);
   appendIfNotNull(editTaskFormData, 'due_date', editTaskForm.due_date);
   appendIfNotNull(editTaskFormData, 'tags', JSON.stringify(editTaskForm.tags));
+  appendIfNotNull(editTaskFormData, 'attachments', JSON.stringify(editTaskForm.attachments));
 
   editTaskForm.new_attachments.forEach((file, index) => {
     editTaskFormData.append('new_attachments[]', file);
@@ -648,6 +660,11 @@ function removeAttachmentsFromEditedTask($event)
   editTaskForm.new_attachments.splice(editTaskForm.new_attachments.indexOf($event.file), 1);
 }
 
+function deleteAttachment(attachment)
+{
+  editTaskForm.attachments.splice(editTaskForm.attachments.indexOf(attachment), 1);
+}
+
 watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
 </script>
 
@@ -657,7 +674,7 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
     <Toast position="top-left"/>
 
     <!--CREATE TASK DIALOG-->
-    <Dialog v-model:visible="createTaskDialogVisible" modal header="Create a Task" :style="{ width: '50rem' }">
+    <Dialog v-model:visible="createTaskDialogVisible" modal header="Create a Task" :style="{ width: '70rem' }">
       <div class="flex items-center gap-4 mb-4">
         <InputText id="task_header" class="flex-auto" autocomplete="off" v-model="createTaskForm.task_header"
                    placeholder="Task name"/>
@@ -722,7 +739,7 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
     </Dialog>
 
     <!--EDIT TASK DIALOG-->
-    <Dialog v-model:visible="editTaskDialogVisible" modal header="Edit a Task" :style="{ width: '50rem' }">
+    <Dialog v-model:visible="editTaskDialogVisible" modal header="Edit a Task" :style="{ width: '70rem' }">
       <div class="flex items-center gap-4 mb-4">
         <InputText id="edit_task_header" class="flex-auto" autocomplete="off" v-model="editTaskForm.task_header"
                    placeholder="Task name"/>
@@ -774,6 +791,28 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
         <div>
           <Chip v-for="edited_task_tag in editTaskForm.tags" :key="edited_task_tag.id" :label="edited_task_tag.tag_name" removable class="mr-2! mb-2! px-2! py-1!" @remove="() => editTaskForm.tags.splice(editTaskForm.tags.indexOf(edited_task_tag), 1)"/>
         </div>
+      </div>
+      <div class="mt-4!">
+        <p><b>Attachments</b></p>
+        <DataTable :value="editTaskForm.attachments" tableStyle="min-width: 50rem" v-if="editTaskForm.attachments.length > 0">
+          <Column field="filename" header="Filename"></Column>
+          <Column header="Size (bytes)">
+            <template #body="slotProps">
+              {{ formatBytes(slotProps.data.size) }}
+            </template>
+          </Column>
+          <Column field="created_at" header="Import date"></Column>
+          <Column header="Actions">
+            <template #body="slotProps">
+              <a href="#" @click.prevent="() => deleteAttachment(slotProps.data)">
+                <unicon name="trash" fill="#be0000"></unicon>
+              </a>
+            </template>
+          </Column>
+        </DataTable>
+        <p v-else>
+          No attachments yet
+        </p>
       </div>
       <div class="mt-4!">
         <p><b>New Attachments</b></p>
