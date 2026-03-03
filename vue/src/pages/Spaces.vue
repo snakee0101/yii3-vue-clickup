@@ -7,6 +7,16 @@ import priority from "@/utilities/priority.js";
 const toast = useToast();
 let all_tags_list = reactive([]);
 
+function createRandomString(length) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+
 function formatBytes(bytes) {
   if (bytes < 1024) {
     return bytes + ' B';
@@ -264,6 +274,7 @@ let createTaskForm = reactive({
   due_date: null,
   tags: [],
   attachments: [],
+  checklists: []
 });
 
 function openCreateTaskDialog(taskList, parent_id) {
@@ -665,6 +676,53 @@ function deleteAttachment(attachment)
   editTaskForm.attachments.splice(editTaskForm.attachments.indexOf(attachment), 1);
 }
 
+//create checklists
+function createChecklistForNewTask()
+{
+  createTaskForm.checklists.push({
+    'temp_unique_id': createRandomString(64),
+    'checklist_name': 'Checklist',
+    'task_id': null,
+    'items': [{
+      'item_name': '',
+      'is_completed': false,
+      'temp_unique_id': createRandomString(64)
+    }]
+  });
+}
+
+function deleteCreateFormChecklist(temp_unique_id)
+{
+  const index = createTaskForm.checklists.findIndex(
+      checklist => checklist.temp_unique_id === temp_unique_id
+  );
+
+  createTaskForm.checklists.splice(index, 1);
+}
+
+function deleteTaskFromCreateChecklist(checklist_unique_id, checklist_item_unique_id)
+{
+  let checklist = createTaskForm.checklists.find(
+      checklist => checklist.temp_unique_id === checklist_unique_id
+  );
+
+  const item_index = checklist.items.findIndex(check_list_item => check_list_item.temp_unique_id == checklist_item_unique_id);
+  checklist.items.splice(item_index, 1);
+}
+
+function createTaskForCreateChecklist(checklist_temp_unique_id)
+{
+  let checklist = createTaskForm.checklists.find(
+      checklist => checklist.temp_unique_id === checklist_temp_unique_id
+  );
+
+  checklist.items.push({
+    'item_name': '',
+    'is_completed': false,
+    'temp_unique_id': createRandomString(64)
+  });
+}
+
 watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
 </script>
 
@@ -730,6 +788,33 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
       <div class="mt-4!">
         <p><b>Attachments</b></p>
         <p><FileUpload name="new_task_attachments[]" @select="addAttachmentsToNewTask($event)" @clear="clearAttachmentsFromNewTask" @remove="removeAttachmentsFromNewTask($event)" :multiple="true" :maxFileSize="10000000"></FileUpload></p>
+      </div>
+      <div class="mt-4!">
+        <div class="mb-2!"><b>Checklists</b></div>
+        <a href="#" @click.prevent="createChecklistForNewTask()" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Checklist</a>
+
+        <div class="border-1 border-gray-300 rounded p-2! mt-3!" v-for="checklist in createTaskForm.checklists" :key="checklist.temp_unique_id">
+          <div class="flex mb-2! gap-2">
+            <InputText type="text" class="p-0! border-0! font-bold! grow!" placeholder="enter checklist name..." v-model="checklist.checklist_name"/>
+            <a href="#" class="text-red-600 hover:text-red-800 hover:underline" @click.prevent="() => deleteCreateFormChecklist(checklist.temp_unique_id)" :title="checklist.temp_unique_id">Delete checklist</a>
+          </div>
+          <div class="flex items-center gap-1" v-for="checklist_item in checklist.items" :key="checklist_item.temp_unique_id">
+            <div class="flex items-center flex-1">
+              <Checkbox v-model="checklist_item.is_completed" :inputId="'checklistitem-' + checklist_item.temp_unique_id" :name="'checklistitem-' + checklist_item.temp_unique_id" binary />
+              <InputText
+                  type="text"
+                  class="ml-2! p-0! border-0! flex-1 w-full"
+                  v-model="checklist_item.item_name"
+                  placeholder="enter item name..."
+              />
+            </div>
+
+            <Button class="ml-2 shrink-0 border-0! bg-red-700! hover:bg-red-500!" @click="() => deleteTaskFromCreateChecklist(checklist.temp_unique_id, checklist_item.temp_unique_id)">
+              <unicon name="trash" fill="#fff"></unicon>
+            </Button>
+          </div>
+          <div class=" mt-4!"><a href="#" @click.prevent="() => createTaskForCreateChecklist(checklist.temp_unique_id)" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Item</a></div>
+        </div>
       </div>
       <p class="text-red-500" v-if="createTaskErrors.due_date">{{ createTaskErrors.due_date[0] }}</p>
       <div class="flex justify-end gap-2 mt-4!">

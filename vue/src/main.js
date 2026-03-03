@@ -24,6 +24,7 @@ import DatePicker from 'primevue/datepicker';
 import Chip from 'primevue/chip';
 import AutoComplete from 'primevue/autocomplete';
 import FileUpload from 'primevue/fileupload';
+import Checkbox from 'primevue/checkbox';
 
 import DataTable from 'primevue/datatable';
 import ColumnGroup from 'primevue/columngroup';   // optional
@@ -74,6 +75,7 @@ app.component('FileUpload', FileUpload);
 app.component('DataTable', DataTable);
 app.component('ColumnGroup', ColumnGroup);
 app.component('Row', Row);
+app.component('Checkbox', Checkbox);
 
 
 //Unicons
