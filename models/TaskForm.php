@@ -12,12 +12,14 @@ class TaskForm extends Model
     public $start_date;
     public $due_date;
     public $attachments;
+    public $checklists;
 
     public function rules()
     {
         return [
             [['task_header'], 'required'],
             [['due_date'], 'validateDueDate'],
+            [['checklists'], 'validateChecklists'],
             [['attachments'], 'file', 'skipOnEmpty' => true, 'maxFiles' => 10],
         ];
     }
@@ -30,6 +32,25 @@ class TaskForm extends Model
 
         if($this->start_date > $this->due_date) {
             $this->addError('due_date', 'Due date must be on or after start date');
+        }
+    }
+
+    public function validateChecklists()
+    {
+        foreach ($this->checklists as $checklist)
+        {
+            if($checklist->checklist_name == '')
+            {
+                $this->addError('checklists.' . $checklist->temp_unique_id, 'Checklist name must not be empty');
+            }
+
+            foreach ($checklist->items as $checklist_item)
+            {
+                if($checklist_item->item_name == '')
+                {
+                    $this->addError('checklists.' . $checklist->temp_unique_id . '.item.' . $checklist_item->temp_unique_id, 'Checklist item must not be empty');
+                }
+            }
         }
     }
 
