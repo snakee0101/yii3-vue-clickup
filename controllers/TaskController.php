@@ -37,8 +37,13 @@ class TaskController extends ActiveController
     public function actions()
     {
         $actions = parent::actions();
-        unset($actions['create'], $actions['update']);
+        unset($actions['create'], $actions['update'], $actions['view']);
         return $actions;
+    }
+
+    public function actionView($id)
+    {
+        return Task::find()->with(['tags', 'subtasks', 'attachments', 'checklists.items'])->where(['id' => $id])->asArray()->one();
     }
 
     public function actionCreate()

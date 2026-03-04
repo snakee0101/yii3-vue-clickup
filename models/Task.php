@@ -14,6 +14,7 @@ class Task extends ActiveRecord
         $fields['subtasks'] = 'subtasks';
         $fields['tags'] = 'tags';
         $fields['attachments'] = 'attachments';
+        $fields['checklists'] = 'checklists';
         return $fields;
     }
 
@@ -36,5 +37,10 @@ class Task extends ActiveRecord
     public function getAttachments()
     {
         return $this->hasMany(Attachment::class, ['task_id' => 'id'])->inverseOf('task');
+    }
+
+    public function getChecklists()
+    {
+        return $this->hasMany(Checklist::class, ['task_id' => 'id']);
     }
 }

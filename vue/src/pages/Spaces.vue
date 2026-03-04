@@ -490,7 +490,8 @@ let editTaskForm = reactive({
   due_date: null,
   tags: [],
   attachments: [],
-  new_attachments: []
+  new_attachments: [],
+  checklists: []
 });
 
 let editTaskDialogVisible = ref(false);
@@ -507,6 +508,7 @@ function openEditTaskDialog(task_id) {
     editTaskForm.due_date = response.data.due_date;
     editTaskForm.tags = response.data.tags;
     editTaskForm.attachments = response.data.attachments;
+    editTaskForm.checklists = response.data.checklists;
   })
 
   editTaskDialogVisible.value = true;
