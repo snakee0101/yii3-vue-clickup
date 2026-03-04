@@ -508,7 +508,18 @@ function openEditTaskDialog(task_id) {
     editTaskForm.due_date = response.data.due_date;
     editTaskForm.tags = response.data.tags;
     editTaskForm.attachments = response.data.attachments;
-    editTaskForm.checklists = response.data.checklists;
+    editTaskForm.checklists = response.data.checklists?.map(function(checklist) {
+      checklist.temp_unique_id = checklist.id;
+
+      checklist.items?.map(function(checklist_item) {
+        checklist_item.temp_unique_id = checklist_item.id;
+        checklist_item.is_completed = checklist_item.is_completed === 1;
+
+        return checklist_item;
+      });
+
+      return checklist;
+    });
   })
 
   editTaskDialogVisible.value = true;
@@ -523,6 +534,7 @@ function editTask() {
   appendIfNotNull(editTaskFormData, 'due_date', editTaskForm.due_date);
   appendIfNotNull(editTaskFormData, 'tags', JSON.stringify(editTaskForm.tags));
   appendIfNotNull(editTaskFormData, 'attachments', JSON.stringify(editTaskForm.attachments));
+  appendIfNotNull(editTaskFormData, 'checklists', JSON.stringify(editTaskForm.checklists));
 
   editTaskForm.new_attachments.forEach((file, index) => {
     editTaskFormData.append('new_attachments[]', file);
@@ -545,6 +557,7 @@ function editTask() {
         editTaskForm.tags = [];
         editTaskForm.attachments = [];
         editTaskForm.new_attachments = [];
+        editTaskForm.checklists = [];
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task changed', life: 3000});
         reloadSpaces();
@@ -911,6 +924,37 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
         <p v-else>
           No attachments yet
         </p>
+      </div>
+      <div class="mt-4!">
+        <div class="mb-2!"><b>Checklists</b></div>
+        <a href="#" @click.prevent="() => alert('must create new checklist')" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Checklist</a>
+
+        <div class="border-1 border-gray-300 rounded p-2! mt-3!" v-for="checklist in editTaskForm.checklists" :key="checklist.temp_unique_id">
+          <div class="flex gap-2">
+            <InputText type="text" class="p-0! border-0! font-bold! grow!" placeholder="enter checklist name..." v-model="checklist.checklist_name"/>
+            <a href="#" class="text-red-600 hover:text-red-800 hover:underline" @click.prevent="() => alert('must delete checklist by temp unique id')" :title="checklist.temp_unique_id">Delete checklist</a>
+          </div>
+          <p class="text-red-500 mb-2!" v-if="editTaskErrors['checklists.' + checklist.temp_unique_id]">{{editTaskErrors['checklists.' + checklist.temp_unique_id][0] }}</p>
+          <div v-for="checklist_item in checklist.items" :key="checklist_item.temp_unique_id">
+            <div class="flex items-center gap-1">
+              <div class="flex items-center flex-1">
+                <Checkbox v-model="checklist_item.is_completed" :inputId="'checklistitem-' + checklist_item.temp_unique_id" :name="'checklistitem-' + checklist_item.temp_unique_id" binary />
+                <InputText
+                    type="text"
+                    class="ml-2! p-0! border-0! flex-1 w-full"
+                    v-model="checklist_item.item_name"
+                    placeholder="enter item name..."
+                />
+              </div>
+
+              <Button class="ml-2 shrink-0 border-0! bg-red-700! hover:bg-red-500!" @click="() => alert('must delete an item from checklist by checklist and checklist item temp unique ids')">
+                <unicon name="trash" fill="#fff"></unicon>
+              </Button>
+            </div>
+            <p class="text-red-500 mb-2!" v-if="editTaskErrors['checklists.' + checklist.temp_unique_id + '.item.' + checklist_item.temp_unique_id]">{{ editTaskErrors['checklists.' + checklist.temp_unique_id + '.item.' + checklist_item.temp_unique_id][0] }}</p>
+          </div>
+          <div class=" mt-4!"><a href="#" @click.prevent="() => alert('create task for edit form checklist by checklist temp unique id')" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Item</a></div>
+        </div>
       </div>
       <div class="mt-4!">
         <p><b>New Attachments</b></p>
