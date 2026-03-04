@@ -88,4 +88,26 @@ class TaskForm extends Model
             $task->unlink('attachments', $attachment, true);
         }
     }
+
+    public function saveChecklists(Task $task, array $checklists)
+    {
+        foreach ($checklists as $checklist)
+        {
+            $checklist_model = new Checklist();
+            $checklist_model->checklist_name = $checklist->checklist_name;
+            $checklist_model->task_id = $task->id;
+            $checklist_model->save();
+
+            foreach ($checklist->items as $checklist_item)
+            {
+                $checklist_model->refresh();
+
+                $checklist_item_model = new ChecklistItem();
+                $checklist_item_model->checklist_id = $checklist_model->id;
+                $checklist_item_model->item_name = $checklist_item->item_name;
+                $checklist_item_model->is_completed = $checklist_item->is_completed;
+                $checklist_item_model->save();
+            }
+        }
+    }
 }

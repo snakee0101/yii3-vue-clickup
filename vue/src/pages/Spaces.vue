@@ -334,6 +334,7 @@ function createTask() {
         createTaskForm.due_date = null;
         createTaskForm.tags = [];
         createTaskForm.attachments = [];
+        createTaskForm.checklists = [];
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task created', life: 3000});
         reloadSpaces();

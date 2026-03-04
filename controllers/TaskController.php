@@ -97,6 +97,7 @@ class TaskController extends ActiveController
 
         //process attachments
         $model->uploadAndSaveAttachments($task, 'attachments');
+        $model->saveChecklists($task, $checklists);
         return $task;
     }
 
