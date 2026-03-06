@@ -161,6 +161,7 @@ class TaskController extends ActiveController
 
         $model->uploadAndSaveAttachments($task, 'new_attachments');
         $model->deleteMissingAttachments($task, $attachments);
+        $model->manageChecklists($task, $checklists);
 
         return $task;
     }

@@ -110,4 +110,81 @@ class TaskForm extends Model
             }
         }
     }
+
+    public function manageChecklists(Task $task, array $checklists)
+    {
+        /*
+         *  {
+        "temp_unique_id": "hGKIbsNqkyzefDOXO4LcsnN6C66U7o0rn2Ho7IcTRgs2inh8M4Gno04hpLH3EZrs",
+        "checklist_name": "Checklist",
+        "task_id": 2,
+        "id": 1, //present if its not new
+        "items": [
+            {
+                "id": 10, //present if its not new
+                "item_name": "752075750",
+                "is_completed": false,
+                "temp_unique_id": "zD2hnFqy8M5OlycxBmHt3cDxWp2KWhwdDMUQXvrx7XqYDyvTXGcqzSGXoB3iysyw"
+            },
+            {
+                "item_name": "2072",
+                "is_completed": true,
+                "temp_unique_id": "zX28zJzCW9ALEByPZ1pmkqSdhrCo4HBP7EOGUtQLwBBf8zLS7xdyl4dSnFLw1Fpt"
+            },
+            {
+                "item_name": "52",
+                "is_completed": false,
+                "temp_unique_id": "aXfMowmLyU44WUTeVJRZCwXg6xjMgjK2HHwuBGUtMhsfRXTpmnHYzsXFKotsPcxi"
+            }
+        ]
+    }
+         * */
+
+        $original_checklist_ids = array_column($task->checklists, 'id');
+
+        //1. if there are checklist ids that are present in the table, but not in the form - that are the ids of checklists to be deleted
+        $form_checklist_ids = array_column($checklists, 'id');
+        $deleted_checklist_ids = array_diff($original_checklist_ids, $form_checklist_ids);
+        Checklist::deleteAll(['in', 'id', $deleted_checklist_ids]);
+
+        foreach ($checklists as $checklist)
+        {
+            //2. if checklist id is not defined - that means it is a new checklist - and it must be created
+            if(property_exists($checklist, 'id') === false)
+            {
+                $this->saveChecklists($task, [$checklist]);
+                continue;
+            }
+
+            //3. if checklist exist - edit it (change the name)
+            $checklist_model = Checklist::findOne(['id' => $checklist->id]);
+            $checklist_model->checklist_name = $checklist->checklist_name;
+            $checklist_model->save();
+
+            //4. manage checklist items
+            foreach ($checklist->items as $checklist_item)
+            {
+                //5. if checklist item doesn't have id - than its new
+                if(property_exists($checklist_item, 'id') === false)
+                {
+                    $checklist_item_model = new ChecklistItem();
+                    $checklist_item_model->checklist_id = $checklist_model->id;
+                    $checklist_item_model->item_name = $checklist_item->item_name;
+                    $checklist_item_model->is_completed = $checklist_item->is_completed;
+                    $checklist_item_model->save();
+
+                    continue;
+                }
+
+                //6. otherwise it is an existing checklist item and it must be edited
+                $checklist_item_model = ChecklistItem::findOne(['id' => $checklist_item->id]);
+                $checklist_item_model->checklist_id = $checklist_model->id;
+                $checklist_item_model->item_name = $checklist_item->item_name;
+                $checklist_item_model->is_completed = $checklist_item->is_completed;
+                $checklist_item_model->save();
+            }
+        }
+
+        return $checklists;
+    }
 }

@@ -869,6 +869,7 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
                 <InputText
                     type="text"
                     class="ml-2! p-0! border-0! flex-1 w-full"
+                    :class="checklist_item.is_completed ? 'line-through' : ''"
                     v-model="checklist_item.item_name"
                     placeholder="enter item name..."
                 />
@@ -988,6 +989,7 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
                 <InputText
                     type="text"
                     class="ml-2! p-0! border-0! flex-1 w-full"
+                    :class="checklist_item.is_completed ? 'line-through' : ''"
                     v-model="checklist_item.item_name"
                     placeholder="enter item name..."
                 />
