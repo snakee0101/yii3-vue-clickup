@@ -708,6 +708,20 @@ function createChecklistForNewTask()
   });
 }
 
+function createChecklistForEditedTask()
+{
+  editTaskForm.checklists.push({
+    'temp_unique_id': createRandomString(64),
+    'checklist_name': 'Checklist',
+    'task_id': editTaskForm.task_id,
+    'items': [{
+      'item_name': '',
+      'is_completed': false,
+      'temp_unique_id': createRandomString(64)
+    }]
+  });
+}
+
 function deleteCreateFormChecklist(temp_unique_id)
 {
   const index = createTaskForm.checklists.findIndex(
@@ -715,6 +729,15 @@ function deleteCreateFormChecklist(temp_unique_id)
   );
 
   createTaskForm.checklists.splice(index, 1);
+}
+
+function deleteEditFormChecklist(temp_unique_id)
+{
+  const index = editTaskForm.checklists.findIndex(
+      checklist => checklist.temp_unique_id === temp_unique_id
+  );
+
+  editTaskForm.checklists.splice(index, 1);
 }
 
 function deleteTaskFromCreateChecklist(checklist_unique_id, checklist_item_unique_id)
@@ -727,9 +750,32 @@ function deleteTaskFromCreateChecklist(checklist_unique_id, checklist_item_uniqu
   checklist.items.splice(item_index, 1);
 }
 
+function deleteTaskFromEditChecklist(checklist_unique_id, checklist_item_unique_id)
+{
+  let checklist = editTaskForm.checklists.find(
+      checklist => checklist.temp_unique_id === checklist_unique_id
+  );
+
+  const item_index = checklist.items.findIndex(check_list_item => check_list_item.temp_unique_id == checklist_item_unique_id);
+  checklist.items.splice(item_index, 1);
+}
+
 function createTaskForCreateChecklist(checklist_temp_unique_id)
 {
   let checklist = createTaskForm.checklists.find(
+      checklist => checklist.temp_unique_id === checklist_temp_unique_id
+  );
+
+  checklist.items.push({
+    'item_name': '',
+    'is_completed': false,
+    'temp_unique_id': createRandomString(64)
+  });
+}
+
+function createTaskForEditChecklist(checklist_temp_unique_id)
+{
+  let checklist = editTaskForm.checklists.find(
       checklist => checklist.temp_unique_id === checklist_temp_unique_id
   );
 
@@ -927,12 +973,12 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
       </div>
       <div class="mt-4!">
         <div class="mb-2!"><b>Checklists</b></div>
-        <a href="#" @click.prevent="() => alert('must create new checklist')" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Checklist</a>
+        <a href="#" @click.prevent="createChecklistForEditedTask()" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Checklist</a>
 
         <div class="border-1 border-gray-300 rounded p-2! mt-3!" v-for="checklist in editTaskForm.checklists" :key="checklist.temp_unique_id">
           <div class="flex gap-2">
             <InputText type="text" class="p-0! border-0! font-bold! grow!" placeholder="enter checklist name..." v-model="checklist.checklist_name"/>
-            <a href="#" class="text-red-600 hover:text-red-800 hover:underline" @click.prevent="() => alert('must delete checklist by temp unique id')" :title="checklist.temp_unique_id">Delete checklist</a>
+            <a href="#" class="text-red-600 hover:text-red-800 hover:underline" @click.prevent="() => deleteEditFormChecklist(checklist.temp_unique_id)" :title="checklist.temp_unique_id">Delete checklist</a>
           </div>
           <p class="text-red-500 mb-2!" v-if="editTaskErrors['checklists.' + checklist.temp_unique_id]">{{editTaskErrors['checklists.' + checklist.temp_unique_id][0] }}</p>
           <div v-for="checklist_item in checklist.items" :key="checklist_item.temp_unique_id">
@@ -947,13 +993,13 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
                 />
               </div>
 
-              <Button class="ml-2 shrink-0 border-0! bg-red-700! hover:bg-red-500!" @click="() => alert('must delete an item from checklist by checklist and checklist item temp unique ids')">
+              <Button class="ml-2 shrink-0 border-0! bg-red-700! hover:bg-red-500!" @click="() => deleteTaskFromEditChecklist(checklist.temp_unique_id, checklist_item.temp_unique_id)">
                 <unicon name="trash" fill="#fff"></unicon>
               </Button>
             </div>
             <p class="text-red-500 mb-2!" v-if="editTaskErrors['checklists.' + checklist.temp_unique_id + '.item.' + checklist_item.temp_unique_id]">{{ editTaskErrors['checklists.' + checklist.temp_unique_id + '.item.' + checklist_item.temp_unique_id][0] }}</p>
           </div>
-          <div class=" mt-4!"><a href="#" @click.prevent="() => alert('create task for edit form checklist by checklist temp unique id')" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Item</a></div>
+          <div class=" mt-4!"><a href="#" @click.prevent="() => createTaskForEditChecklist(checklist.temp_unique_id)" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Item</a></div>
         </div>
       </div>
       <div class="mt-4!">
