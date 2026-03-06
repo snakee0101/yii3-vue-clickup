@@ -114,6 +114,7 @@ class TaskController extends ActiveController
         $due_date     = $_REQUEST['due_date']     ?? null;
         $start_date   = $_REQUEST['start_date']   ?? null;
         $attachments  = isset($_REQUEST['attachments']) ? json_decode($_REQUEST['attachments']) : [];
+        $checklists   = $_REQUEST['checklists'] == '[]' ? [] : json_decode($_REQUEST['checklists']);
 
         $tags = isset($_REQUEST['tags'])
             ? json_decode($_REQUEST['tags'], true)
@@ -123,6 +124,7 @@ class TaskController extends ActiveController
         $model->task_header = $task_header;
         $model->due_date = $due_date;
         $model->start_date = $start_date;
+        $model->checklists = $checklists;
 
         if ($model->validate() === false) {
             Yii::$app->response->statusCode = 422;

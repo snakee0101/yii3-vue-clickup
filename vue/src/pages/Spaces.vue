@@ -896,7 +896,7 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
         <InputText id="edit_task_header" class="flex-auto" autocomplete="off" v-model="editTaskForm.task_header"
                    placeholder="Task name"/>
       </div>
-      <p class="text-red-500" v-if="editTaskErrors.task_header">{{ editTaskErrors.task_header[0] }}</p>
+      <p class="text-red-500" v-if="editTaskErrors['task_header']">{{ editTaskErrors.task_header[0] }}</p>
       <div class="flex items-center gap-4 mt-4!">
         <Textarea id="edit_task_content" class="flex-auto" autocomplete="off" rows="5" cols="30"
                   v-model="editTaskForm.task_content" placeholder="Task description"/>
