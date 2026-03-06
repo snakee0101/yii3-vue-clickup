@@ -2,6 +2,8 @@
 
 namespace app\commands;
 
+use app\models\Checklist;
+use app\models\ChecklistItem;
 use app\models\User;
 use Yii;
 use yii\console\Controller;
@@ -167,6 +169,32 @@ class SeedController extends Controller
         return $subtasks;
     }
 
+    public function seedChecklists($tasks)
+    {
+        $faker = Faker\Factory::create();
+
+        foreach ($tasks as $key => $task) {
+            if ($key % 2 == 0) continue;
+
+            for ($i = 0; $i < 2; $i++) {
+                $checklist_model = new Checklist();
+                $checklist_model->checklist_name = $faker->words(4, true);
+                $checklist_model->task_id = $task->id;
+                $checklist_model->save();
+
+                for ($j = 0; $j < 3; $j++) {
+                    $checklist_item_model = new ChecklistItem();
+                    $checklist_item_model->checklist_id = $checklist_model->id;
+                    $checklist_item_model->item_name =  $faker->words(4, true);
+                    $checklist_item_model->is_completed = $faker->boolean();
+                    $checklist_item_model->save();
+                }
+            }
+        }
+
+        echo "Seeding checklists..." . "\n";
+    }
+
     public function actionIndex()
     {
         $users = $this->seedUsers();
@@ -175,6 +203,7 @@ class SeedController extends Controller
         $lists = $this->seedLists($folders);
         $tasks = $this->seedTasks($lists);
         $this->seedSubTasks($tasks);
+        $this->seedChecklists($tasks);
 
         echo "Database seeded successfully" . "\n";
 
