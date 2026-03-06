@@ -142,30 +142,62 @@ class TaskForm extends Model
 
         $original_checklist_ids = array_column($task->checklists, 'id');
 
-        //1. if there are checklist ids that are present in the table, but not in the form - that are the ids of checklists to be deleted
-        $form_checklist_ids = array_column($checklists, 'id');
+        // 1. if there are checklist ids that are present in the table, but not in the form - that are the ids of checklists to be deleted
+        $form_checklist_ids = array_filter(array_column($checklists, 'id'));
         $deleted_checklist_ids = array_diff($original_checklist_ids, $form_checklist_ids);
-        Checklist::deleteAll(['in', 'id', $deleted_checklist_ids]);
+
+        if (!empty($deleted_checklist_ids)) {
+            Checklist::deleteAll(['in', 'id', $deleted_checklist_ids]);
+        }
+
+        // 2. delete removed item from checklist - if item exists in a checklist, but doesn't exist in a form - then delete an item from a checklist
+        // must be in this exact order - otherwise items could not be added to the checklist
+        foreach ($checklists as $checklist)
+        {
+            // 2.1. leave only form checklist items that have an id
+            $form_checklist_items_ids = [];  // ids: [1,2,3,null/no id,4] => [1,2,3,4]
+
+            foreach ($checklist->items as $checklist_item)
+            {
+                if (property_exists($checklist_item, 'id')) {
+                    $form_checklist_items_ids[] = $checklist_item->id;
+                }
+            }
+
+            // we can remove items only if checklist is not new
+            if (property_exists($checklist, 'id'))
+            {
+                if (!empty($form_checklist_items_ids)) {
+                    ChecklistItem::deleteAll([
+                        'and',
+                        ['checklist_id' => $checklist->id],
+                        ['not in', 'id', $form_checklist_items_ids],
+                    ]);
+                } else {
+                    ChecklistItem::deleteAll(['checklist_id' => $checklist->id]); // if all items were removed
+                }
+            }
+        }
 
         foreach ($checklists as $checklist)
         {
-            //2. if checklist id is not defined - that means it is a new checklist - and it must be created
-            if(property_exists($checklist, 'id') === false)
+            // 3. if checklist id is not defined - that means it is a new checklist - and it must be created
+            if (property_exists($checklist, 'id') === false)
             {
                 $this->saveChecklists($task, [$checklist]);
                 continue;
             }
 
-            //3. if checklist exist - edit it (change the name)
+            // 4. if checklist exist - edit it (change the name)
             $checklist_model = Checklist::findOne(['id' => $checklist->id]);
             $checklist_model->checklist_name = $checklist->checklist_name;
             $checklist_model->save();
 
-            //4. manage checklist items
+            // 5. manage checklist items
             foreach ($checklist->items as $checklist_item)
             {
-                //5. if checklist item doesn't have id - than its new
-                if(property_exists($checklist_item, 'id') === false)
+                // 6. if checklist item doesn't have id - than its a new checklist
+                if (property_exists($checklist_item, 'id') === false)
                 {
                     $checklist_item_model = new ChecklistItem();
                     $checklist_item_model->checklist_id = $checklist_model->id;
@@ -176,7 +208,7 @@ class TaskForm extends Model
                     continue;
                 }
 
-                //6. otherwise it is an existing checklist item and it must be edited
+                // 7. otherwise it is an existing checklist item and it must be edited
                 $checklist_item_model = ChecklistItem::findOne(['id' => $checklist_item->id]);
                 $checklist_item_model->checklist_id = $checklist_model->id;
                 $checklist_item_model->item_name = $checklist_item->item_name;
@@ -184,7 +216,5 @@ class TaskForm extends Model
                 $checklist_item_model->save();
             }
         }
-
-        return $checklists;
     }
 }
