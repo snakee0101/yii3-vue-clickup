@@ -30,6 +30,9 @@ import DataTable from 'primevue/datatable';
 import ColumnGroup from 'primevue/columngroup';   // optional
 import Row from 'primevue/row';                   // optional
 
+import { QuillEditor } from '@vueup/vue-quill'; //https://vueup.github.io/vue-quill/api/#v-model-content
+import '@vueup/vue-quill/dist/vue-quill.snow.css';
+
 //Unicons icons docs: https://iconscout.com/unicons/thin-line-icons/plus,  https://github.com/antonreshetov/vue-unicons
 //example of styling: <unicon name="plus" fill="#ffffff" stroke="#ffffff"></unicon>
 import Unicon from 'vue-unicons';
@@ -76,7 +79,7 @@ app.component('DataTable', DataTable);
 app.component('ColumnGroup', ColumnGroup);
 app.component('Row', Row);
 app.component('Checkbox', Checkbox);
-
+app.component('QuillEditor', QuillEditor);
 
 //Unicons
 Unicon.add([uniPlus, uniTachometerFast, uniTrash, uniDownloadAltSolid]);

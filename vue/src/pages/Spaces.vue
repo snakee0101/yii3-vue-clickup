@@ -801,9 +801,8 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
                    placeholder="Task name"/>
       </div>
       <p class="text-red-500" v-if="createTaskErrors.task_header">{{ createTaskErrors.task_header[0] }}</p>
-      <div class="flex items-center gap-4 mt-4!">
-        <Textarea id="task_content" class="flex-auto" autocomplete="off" rows="5" cols="30"
-                  v-model="createTaskForm.task_content" placeholder="Task description"/>
+      <div class="mt-4!">
+        <QuillEditor contentType="html" theme="snow" toolbar="full" placeholder="Task description" v-model:content="createTaskForm.task_content" />
       </div>
       <div class="flex items-center gap-4 mb-4 mt-4!">
         <p>Priority</p>
@@ -898,9 +897,8 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
                    placeholder="Task name"/>
       </div>
       <p class="text-red-500" v-if="editTaskErrors['task_header']">{{ editTaskErrors.task_header[0] }}</p>
-      <div class="flex items-center gap-4 mt-4!">
-        <Textarea id="edit_task_content" class="flex-auto" autocomplete="off" rows="5" cols="30"
-                  v-model="editTaskForm.task_content" placeholder="Task description"/>
+      <div class="mt-4!">
+        <QuillEditor contentType="html" theme="snow" toolbar="full" placeholder="Task description" v-model:content="editTaskForm.task_content" />
       </div>
       <div class="flex items-center gap-4 mb-4 mt-4!">
         <p>Priority</p>
