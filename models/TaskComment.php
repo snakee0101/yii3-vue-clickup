@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 
 class TaskComment extends ActiveRecord
@@ -11,6 +12,15 @@ class TaskComment extends ActiveRecord
     public function fields()
     {
         return [...parent::fields(), 'id'];
+    }
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => TimestampBehavior::class,
+            ],
+        ];
     }
 
     public static function tableName()

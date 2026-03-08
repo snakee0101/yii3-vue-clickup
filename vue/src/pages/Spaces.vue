@@ -814,6 +814,26 @@ function createComment(task_id)
       });
 }
 
+function formatTimestamp(timestamp) {
+  const date = new Date(timestamp * 1000); // Перетворюємо секунди в мілісекунди
+
+  const pad = (num) => String(num).padStart(2, '0');
+
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+function deleteComment(comment_id)
+{
+  alert('comment deleted');
+}
+
 watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
 </script>
 
@@ -1040,8 +1060,12 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
       <div class="edit-dialog-comments max-w-3xl grow bg-gray-50 flex flex-col">
         <div class="bg-white m-2! text-center text-2xl p-2!">Comments</div>
         <div class="grow px-4! overflow-y-scroll" style="max-height: 800px">
-          <div class="bg-white m-2! block p-2! mb-4!" v-for="comment in editTaskForm.taskComments" v-html="comment.comment_content">
-
+          <div v-for="comment in editTaskForm.taskComments" :key="comment.id" class=" mb-4!">
+            <div class="bg-white mx-2! block p-2!" v-html="comment.comment_content"></div>
+            <div class="mx-2! flex justify-between">
+              <p class="text-gray-500">{{ formatTimestamp(comment.created_at) }}</p>
+              <a href="#" @click="deleteComment(comment.id)" class="text-red-500 hover:underline hover:text-red-800">Delete</a>
+            </div>
           </div>
         </div>
         <div class="bg-white">

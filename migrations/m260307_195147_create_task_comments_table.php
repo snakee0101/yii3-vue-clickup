@@ -17,6 +17,8 @@ class m260307_195147_create_task_comments_table extends Migration
             'task_id' => $this->integer()->notNull(),
             'user_id' => $this->integer()->notNull(),
             'comment_content' => $this->text()->notNull(),
+            'created_at' => $this->integer()->notNull(),
+            'updated_at' => $this->integer()->notNull(),
         ]);
 
         $this->addForeignKey('fk_task_comments_task_id', 'task_comments', 'task_id', 'tasks', 'id', 'CASCADE');
