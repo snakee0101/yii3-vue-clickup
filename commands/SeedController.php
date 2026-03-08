@@ -4,8 +4,10 @@ namespace app\commands;
 
 use app\models\Checklist;
 use app\models\ChecklistItem;
+use app\models\TaskComment;
 use app\models\User;
 use Yii;
+use yii\behaviors\TimestampBehavior;
 use yii\console\Controller;
 use yii\console\ExitCode;
 use Faker;
@@ -195,6 +197,28 @@ class SeedController extends Controller
         echo "Seeding checklists..." . "\n";
     }
 
+    public function seedComments($tasks, $users)
+    {
+        $faker = Faker\Factory::create();
+
+        foreach ($tasks as $key => $task) {
+            if ($key % 2 != 0) continue;
+
+            for ($i = 0; $i < 3; $i++) {
+               $comment = new TaskComment();
+               $comment->detachBehaviors(); //temporarily turn off auto-timestamps and all other behaviours
+               $comment->task_id = $task->id;
+               $comment->user_id = $users[0]->id;
+               $comment->comment_content = "<p><strong style=\"background-color: rgb(0, 102, 204); color: rgb(255, 255, 255);\">75207207520</strong></p><p>comment $i</p>";
+               $comment->created_at = $faker->dateTimeBetween('-1 year', 'now')->getTimestamp();
+               $comment->updated_at = $comment->created_at;
+               $comment->save(false);
+            }
+        }
+
+        echo "Seeding comments..." . "\n";
+    }
+
     public function actionIndex()
     {
         $users = $this->seedUsers();
@@ -204,6 +228,7 @@ class SeedController extends Controller
         $tasks = $this->seedTasks($lists);
         $this->seedSubTasks($tasks);
         $this->seedChecklists($tasks);
+        $this->seedComments($tasks, $users);
 
         echo "Database seeded successfully" . "\n";
 
