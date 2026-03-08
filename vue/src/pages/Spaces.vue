@@ -491,7 +491,8 @@ let editTaskForm = reactive({
   tags: [],
   attachments: [],
   new_attachments: [],
-  checklists: []
+  checklists: [],
+  taskComments: []
 });
 
 let editTaskDialogVisible = ref(false);
@@ -508,6 +509,7 @@ function openEditTaskDialog(task_id) {
     editTaskForm.due_date = response.data.due_date;
     editTaskForm.tags = response.data.tags;
     editTaskForm.attachments = response.data.attachments;
+    editTaskForm.taskComments = response.data.taskComments;
     editTaskForm.checklists = response.data.checklists?.map(function(checklist) {
       checklist.temp_unique_id = checklist.id;
 
@@ -786,6 +788,60 @@ function createTaskForEditChecklist(checklist_temp_unique_id)
   });
 }
 
+//Edit dialog comments section
+const new_edit_dialog_comment = ref(null);
+const taskCommentErrors = ref([]);
+const commentEditor = ref(null);
+
+function createComment(task_id)
+{
+  //very often Quill Editor's empty value is in fact <p><br></p>, not null or "" - therefore it must be reset manually
+  if(new_edit_dialog_comment.value == "<p><br></p>")
+  {
+    new_edit_dialog_comment.value = null;
+  }
+
+  axios.post('http://localhost:8081/task-comments', {'comment_content': new_edit_dialog_comment.value, 'task_id': task_id})
+      .then((response) => {
+        taskCommentErrors.value = [];
+        new_edit_dialog_comment.value = null;
+        commentEditor.value?.setHTML('');
+
+        editTaskForm.taskComments.unshift(response.data);
+
+        toast.add({severity: 'success', summary: 'Success', detail: 'Comment created', life: 3000});
+      })
+      .catch((error) => {
+        taskCommentErrors.value = error.response.data.errors;
+      });
+}
+
+function formatTimestamp(timestamp) {
+  const date = new Date(timestamp * 1000); // Перетворюємо секунди в мілісекунди
+
+  const pad = (num) => String(num).padStart(2, '0');
+
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+function deleteComment(comment_id)
+{
+  axios.delete('http://localhost:8081/task-comments/' + comment_id)
+       .then((response) => {
+         editTaskForm.taskComments.splice(editTaskForm.taskComments.indexOf(
+             editTaskForm.taskComments.find((comment) => comment.id == comment_id)
+         ), 1);
+         toast.add({severity: 'success', summary: 'Success', detail: 'Comment deleted', life: 3000});
+       });
+}
+
 watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
 </script>
 
@@ -891,120 +947,146 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
     </Dialog>
 
     <!--EDIT TASK DIALOG-->
-    <Dialog v-model:visible="editTaskDialogVisible" modal header="Edit a Task" :style="{ width: '70rem' }">
-      <div class="flex items-center gap-4 mb-4">
-        <InputText id="edit_task_header" class="flex-auto" autocomplete="off" v-model="editTaskForm.task_header"
-                   placeholder="Task name"/>
-      </div>
-      <p class="text-red-500" v-if="editTaskErrors['task_header']">{{ editTaskErrors.task_header[0] }}</p>
-      <div class="mt-4!">
-        <QuillEditor contentType="html" theme="snow" toolbar="full" placeholder="Task description" v-model:content="editTaskForm.task_content" />
-      </div>
-      <div class="flex items-center gap-4 mb-4 mt-4!">
-        <p>Priority</p>
-        <Select v-model="editTaskForm.priority" :options="Priorities.values" optionLabel="label" optionValue="value"
-                class="w-full md:w-56">
-          <template #value="slotProps">
-            <div v-if="slotProps.value" class="flex items-center">
-              <unicon name="tachometer-fast" width="20" height="20"
-                      :fill="Priorities.findByValue(slotProps.value).color"></unicon>
-              <p class="ml-2!">{{ Priorities.findByValue(slotProps.value).label }}</p>
-            </div>
-            <span v-else class="flex">
-              <unicon name="tachometer-fast" width="20" height="20"
-                      :fill="Priorities.findByLabel('Clear').color"></unicon>
-              <p class="ml-2!">Clear</p>
-            </span>
-          </template>
-          <template #option="slotProps">
-            <div class="flex items-center">
-              <unicon name="tachometer-fast" width="20" height="20"
-                      :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
-              <p class="ml-2!">{{ slotProps.option.label }}</p>
-            </div>
-          </template>
-        </Select>
-      </div>
-      <div class="flex items-center gap-4 mb-4 mt-4!">
-        <p>Start Date</p>
-        <DatePicker v-model="editTaskForm.start_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd"
-                    updateModelType="string"/>
-        <p>Due Date</p>
-        <DatePicker v-model="editTaskForm.due_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd"
-                    updateModelType="string"/>
-      </div>
-      <div class="mt-4!">
-        <p><b>Tags</b></p>
-        <div class="flex items-stretch gap-2 my-2!">
-          <AutoComplete v-model="create_task_autocompleted_tag_name" :suggestions="tag_suggestions" @complete="search_tags"/>
-          <Button type="button" label="Add" @click="add_tags_to_edited_task" class="px-4!"></Button>
+    <Dialog v-model:visible="editTaskDialogVisible" modal header="Edit a Task" :style="{ width: '90%' }">
+      <div class="flex gap-4">
+      <div>
+        <div class="flex items-center gap-4 mb-4">
+          <InputText id="edit_task_header" class="flex-auto" autocomplete="off" v-model="editTaskForm.task_header"
+                     placeholder="Task name"/>
         </div>
-        <div>
-          <Chip v-for="edited_task_tag in editTaskForm.tags" :key="edited_task_tag.id" :label="edited_task_tag.tag_name" removable class="mr-2! mb-2! px-2! py-1!" @remove="() => editTaskForm.tags.splice(editTaskForm.tags.indexOf(edited_task_tag), 1)"/>
+        <p class="text-red-500" v-if="editTaskErrors['task_header']">{{ editTaskErrors.task_header[0] }}</p>
+        <div class="mt-4!">
+          <QuillEditor contentType="html" theme="snow" toolbar="full" placeholder="Task description" v-model:content="editTaskForm.task_content" />
         </div>
-      </div>
-      <div class="mt-4!">
-        <p><b>Attachments</b></p>
-        <DataTable :value="editTaskForm.attachments" tableStyle="min-width: 50rem" v-if="editTaskForm.attachments.length > 0">
-          <Column field="filename" header="Filename"></Column>
-          <Column header="Size (bytes)">
-            <template #body="slotProps">
-              {{ formatBytes(slotProps.data.size) }}
+        <div class="flex items-center gap-4 mb-4 mt-4!">
+          <p>Priority</p>
+          <Select v-model="editTaskForm.priority" :options="Priorities.values" optionLabel="label" optionValue="value"
+                  class="w-full md:w-56">
+            <template #value="slotProps">
+              <div v-if="slotProps.value" class="flex items-center">
+                <unicon name="tachometer-fast" width="20" height="20"
+                        :fill="Priorities.findByValue(slotProps.value).color"></unicon>
+                <p class="ml-2!">{{ Priorities.findByValue(slotProps.value).label }}</p>
+              </div>
+              <span v-else class="flex">
+                <unicon name="tachometer-fast" width="20" height="20"
+                        :fill="Priorities.findByLabel('Clear').color"></unicon>
+                <p class="ml-2!">Clear</p>
+              </span>
             </template>
-          </Column>
-          <Column field="created_at" header="Import date"></Column>
-          <Column header="Actions">
-            <template #body="slotProps">
-              <div class="flex gap-2">
-                <a href="#" @click.prevent="() => deleteAttachment(slotProps.data)">
-                  <unicon name="trash" fill="#be0000" height="24" width="24"></unicon>
-                </a>
-                <a :href="'http://localhost:8081/download?attachment_id=' + slotProps.data.id" download target="_blank">
-                  <unicon name="download-alt" icon-style="solid" fill="#0048ff" height="24" width="24"></unicon>
-                </a>
+            <template #option="slotProps">
+              <div class="flex items-center">
+                <unicon name="tachometer-fast" width="20" height="20"
+                        :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
+                <p class="ml-2!">{{ slotProps.option.label }}</p>
               </div>
             </template>
-          </Column>
-        </DataTable>
-        <p v-else>
-          No attachments yet
-        </p>
-      </div>
-      <div class="mt-4!">
-        <div class="mb-2!"><b>Checklists</b></div>
-        <a href="#" @click.prevent="createChecklistForEditedTask()" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Checklist</a>
-
-        <div class="border-1 border-gray-300 rounded p-2! mt-3!" v-for="checklist in editTaskForm.checklists" :key="checklist.temp_unique_id">
-          <div class="flex gap-2">
-            <InputText type="text" class="p-0! border-0! font-bold! grow!" placeholder="enter checklist name..." v-model="checklist.checklist_name"/>
-            <a href="#" class="text-red-600 hover:text-red-800 hover:underline" @click.prevent="() => deleteEditFormChecklist(checklist.temp_unique_id)" :title="checklist.temp_unique_id">Delete checklist</a>
+          </Select>
+        </div>
+        <div class="flex items-center gap-4 mb-4 mt-4!">
+          <p>Start Date</p>
+          <DatePicker v-model="editTaskForm.start_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd"
+                      updateModelType="string"/>
+          <p>Due Date</p>
+          <DatePicker v-model="editTaskForm.due_date" showIcon fluid iconDisplay="input" dateFormat="yy-mm-dd"
+                      updateModelType="string"/>
+        </div>
+        <div class="mt-4!">
+          <p><b>Tags</b></p>
+          <div class="flex items-stretch gap-2 my-2!">
+            <AutoComplete v-model="create_task_autocompleted_tag_name" :suggestions="tag_suggestions" @complete="search_tags"/>
+            <Button type="button" label="Add" @click="add_tags_to_edited_task" class="px-4!"></Button>
           </div>
-          <p class="text-red-500 mb-2!" v-if="editTaskErrors['checklists.' + checklist.temp_unique_id]">{{editTaskErrors['checklists.' + checklist.temp_unique_id][0] }}</p>
-          <div v-for="checklist_item in checklist.items" :key="checklist_item.temp_unique_id">
-            <div class="flex items-center gap-1">
-              <div class="flex items-center flex-1">
-                <Checkbox v-model="checklist_item.is_completed" :inputId="'checklistitem-' + checklist_item.temp_unique_id" :name="'checklistitem-' + checklist_item.temp_unique_id" binary />
-                <InputText
-                    type="text"
-                    class="ml-2! p-0! border-0! flex-1 w-full"
-                    :class="checklist_item.is_completed ? 'line-through' : ''"
-                    v-model="checklist_item.item_name"
-                    placeholder="enter item name..."
-                />
-              </div>
+          <div>
+            <Chip v-for="edited_task_tag in editTaskForm.tags" :key="edited_task_tag.id" :label="edited_task_tag.tag_name" removable class="mr-2! mb-2! px-2! py-1!" @remove="() => editTaskForm.tags.splice(editTaskForm.tags.indexOf(edited_task_tag), 1)"/>
+          </div>
+        </div>
+        <div class="mt-4!">
+          <p><b>Attachments</b></p>
+          <DataTable :value="editTaskForm.attachments" tableStyle="min-width: 50rem" v-if="editTaskForm.attachments.length > 0">
+            <Column field="filename" header="Filename"></Column>
+            <Column header="Size (bytes)">
+              <template #body="slotProps">
+                {{ formatBytes(slotProps.data.size) }}
+              </template>
+            </Column>
+            <Column field="created_at" header="Import date"></Column>
+            <Column header="Actions">
+              <template #body="slotProps">
+                <div class="flex gap-2">
+                  <a href="#" @click.prevent="() => deleteAttachment(slotProps.data)">
+                    <unicon name="trash" fill="#be0000" height="24" width="24"></unicon>
+                  </a>
+                  <a :href="'http://localhost:8081/download?attachment_id=' + slotProps.data.id" download target="_blank">
+                    <unicon name="download-alt" icon-style="solid" fill="#0048ff" height="24" width="24"></unicon>
+                  </a>
+                </div>
+              </template>
+            </Column>
+          </DataTable>
+          <p v-else>
+            No attachments yet
+          </p>
+        </div>
+        <div class="mt-4!">
+          <div class="mb-2!"><b>Checklists</b></div>
+          <a href="#" @click.prevent="createChecklistForEditedTask()" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Checklist</a>
 
-              <Button class="ml-2 shrink-0 border-0! bg-red-700! hover:bg-red-500!" @click="() => deleteTaskFromEditChecklist(checklist.temp_unique_id, checklist_item.temp_unique_id)">
-                <unicon name="trash" fill="#fff"></unicon>
-              </Button>
+          <div class="border-1 border-gray-300 rounded p-2! mt-3!" v-for="checklist in editTaskForm.checklists" :key="checklist.temp_unique_id">
+            <div class="flex gap-2">
+              <InputText type="text" class="p-0! border-0! font-bold! grow!" placeholder="enter checklist name..." v-model="checklist.checklist_name"/>
+              <a href="#" class="text-red-600 hover:text-red-800 hover:underline" @click.prevent="() => deleteEditFormChecklist(checklist.temp_unique_id)" :title="checklist.temp_unique_id">Delete checklist</a>
             </div>
-            <p class="text-red-500 mb-2!" v-if="editTaskErrors['checklists.' + checklist.temp_unique_id + '.item.' + checklist_item.temp_unique_id]">{{ editTaskErrors['checklists.' + checklist.temp_unique_id + '.item.' + checklist_item.temp_unique_id][0] }}</p>
+            <p class="text-red-500 mb-2!" v-if="editTaskErrors['checklists.' + checklist.temp_unique_id]">{{editTaskErrors['checklists.' + checklist.temp_unique_id][0] }}</p>
+            <div v-for="checklist_item in checklist.items" :key="checklist_item.temp_unique_id">
+              <div class="flex items-center gap-1">
+                <div class="flex items-center flex-1">
+                  <Checkbox v-model="checklist_item.is_completed" :inputId="'checklistitem-' + checklist_item.temp_unique_id" :name="'checklistitem-' + checklist_item.temp_unique_id" binary />
+                  <InputText
+                      type="text"
+                      class="ml-2! p-0! border-0! flex-1 w-full"
+                      :class="checklist_item.is_completed ? 'line-through' : ''"
+                      v-model="checklist_item.item_name"
+                      placeholder="enter item name..."
+                  />
+                </div>
+
+                <Button class="ml-2 shrink-0 border-0! bg-red-700! hover:bg-red-500!" @click="() => deleteTaskFromEditChecklist(checklist.temp_unique_id, checklist_item.temp_unique_id)">
+                  <unicon name="trash" fill="#fff"></unicon>
+                </Button>
+              </div>
+              <p class="text-red-500 mb-2!" v-if="editTaskErrors['checklists.' + checklist.temp_unique_id + '.item.' + checklist_item.temp_unique_id]">{{ editTaskErrors['checklists.' + checklist.temp_unique_id + '.item.' + checklist_item.temp_unique_id][0] }}</p>
+            </div>
+            <div class=" mt-4!"><a href="#" @click.prevent="() => createTaskForEditChecklist(checklist.temp_unique_id)" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Item</a></div>
           </div>
-          <div class=" mt-4!"><a href="#" @click.prevent="() => createTaskForEditChecklist(checklist.temp_unique_id)" class="text-blue-500 hover:underline hover:text-blue-800">+ Add Item</a></div>
+        </div>
+        <div class="mt-4!">
+          <p><b>New Attachments</b></p>
+          <p><FileUpload name="edit_task_attachments[]" @select="addAttachmentsToEditedTask($event)" @clear="clearAttachmentsFromEditedTask" @remove="removeAttachmentsFromEditedTask($event)" :multiple="true" :maxFileSize="10000000"></FileUpload></p>
         </div>
       </div>
-      <div class="mt-4!">
-        <p><b>New Attachments</b></p>
-        <p><FileUpload name="edit_task_attachments[]" @select="addAttachmentsToEditedTask($event)" @clear="clearAttachmentsFromEditedTask" @remove="removeAttachmentsFromEditedTask($event)" :multiple="true" :maxFileSize="10000000"></FileUpload></p>
+      <div class="edit-dialog-comments max-w-3xl grow bg-gray-50 flex flex-col">
+        <div class="bg-white m-2! text-center text-2xl p-2!">Comments</div>
+        <div class="grow px-4! overflow-y-scroll" style="max-height: 800px">
+          <div v-for="comment in editTaskForm.taskComments" :key="comment.id" class=" mb-4!">
+            <div class="bg-white mx-2! block p-2!" v-html="comment.comment_content"></div>
+            <div class="mx-2! flex justify-between">
+              <p class="text-gray-500">{{ formatTimestamp(comment.created_at) }}</p>
+              <a href="#" @click="deleteComment(comment.id)" class="text-red-500 hover:underline hover:text-red-800">Delete</a>
+            </div>
+          </div>
+          <p v-if="editTaskForm.taskComments.length == 0" class="italic">
+            No comments yet
+          </p>
+        </div>
+        <div class="bg-white">
+          <QuillEditor contentType="html" theme="snow" toolbar="full" placeholder="Comment" v-model:content="new_edit_dialog_comment" ref="commentEditor"/>
+          <p class="text-red-500 mb-2! mt-2!" v-if="taskCommentErrors['comment_content']">{{ taskCommentErrors.comment_content[0] }}</p>
+          <p class="mt-3!">
+            <Button @click="createComment(editTaskForm.task_id)">Post a comment</Button>
+          </p>
+        </div>
+      </div>
       </div>
       <div class="flex justify-end gap-2 mt-4!">
         <Button type="button" label="Cancel" severity="secondary" @click="editTaskDialogVisible = false"></Button>

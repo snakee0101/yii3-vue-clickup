@@ -43,7 +43,7 @@ class TaskController extends ActiveController
 
     public function actionView($id)
     {
-        return Task::find()->with(['tags', 'subtasks', 'attachments', 'checklists.items'])->where(['id' => $id])->asArray()->one();
+        return Task::find()->with(['tags', 'subtasks', 'attachments', 'checklists.items', 'taskComments'])->where(['id' => $id])->asArray()->one();
     }
 
     public function actionCreate()
