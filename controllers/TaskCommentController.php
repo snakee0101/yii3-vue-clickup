@@ -35,7 +35,7 @@ class TaskCommentController extends ActiveController
     public function actions()
     {
         $actions = parent::actions();
-        unset($actions['create']);
+        unset($actions['create'], $actions['delete']);
         return $actions;
     }
 
@@ -61,5 +61,11 @@ class TaskCommentController extends ActiveController
         $comment->save();
 
         return $comment;
+    }
+
+    public function actionDelete($id)
+    {
+        $model = TaskComment::findOne($id);
+        $model->delete();
     }
 }

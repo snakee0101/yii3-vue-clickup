@@ -831,7 +831,13 @@ function formatTimestamp(timestamp) {
 
 function deleteComment(comment_id)
 {
-  alert('comment deleted');
+  axios.delete('http://localhost:8081/task-comments/' + comment_id)
+       .then((response) => {
+         editTaskForm.taskComments.splice(editTaskForm.taskComments.indexOf(
+             editTaskForm.taskComments.find((comment) => comment.id == comment_id)
+         ), 1);
+         toast.add({severity: 'success', summary: 'Success', detail: 'Comment deleted', life: 3000});
+       });
 }
 
 watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
