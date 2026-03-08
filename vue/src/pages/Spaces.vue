@@ -787,11 +787,29 @@ function createTaskForEditChecklist(checklist_temp_unique_id)
 }
 
 //Edit dialog comments section
-let new_edit_dialog_comment = ref("");
+const new_edit_dialog_comment = ref(null);
+const taskCommentErrors = ref([]);
+const commentEditor = ref(null);
 
 function createComment(task_id)
 {
+  //very often Quill Editor's empty value is in fact <p><br></p>, not null or "" - therefore it must be reset manually
+  if(new_edit_dialog_comment.value == "<p><br></p>")
+  {
+    new_edit_dialog_comment.value = null;
+  }
 
+  axios.post('http://localhost:8081/task-comments', {'comment_content': new_edit_dialog_comment.value, 'task_id': task_id})
+      .then((response) => {
+        taskCommentErrors.value = [];
+        new_edit_dialog_comment.value = null;
+        commentEditor.value?.setHTML('');
+
+        toast.add({severity: 'success', summary: 'Success', detail: 'Comment created', life: 3000});
+      })
+      .catch((error) => {
+        taskCommentErrors.value = error.response.data.errors;
+      });
 }
 
 watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
@@ -1028,7 +1046,8 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
           </div>
         </div>
         <div class="bg-white">
-          <QuillEditor contentType="html" theme="snow" toolbar="full" placeholder="Comment" v-model:content="new_edit_dialog_comment" />
+          <QuillEditor contentType="html" theme="snow" toolbar="full" placeholder="Comment" v-model:content="new_edit_dialog_comment" ref="commentEditor"/>
+          <p class="text-red-500 mb-2! mt-2!" v-if="taskCommentErrors['comment_content']">{{ taskCommentErrors.comment_content[0] }}</p>
           <p class="mt-3!">
             <Button @click="createComment(editTaskForm.task_id)">Post a comment</Button>
           </p>
