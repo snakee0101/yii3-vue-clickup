@@ -807,6 +807,8 @@ function createComment(task_id)
         new_edit_dialog_comment.value = null;
         commentEditor.value?.setHTML('');
 
+        editTaskForm.taskComments.unshift(response.data);
+
         toast.add({severity: 'success', summary: 'Success', detail: 'Comment created', life: 3000});
       })
       .catch((error) => {
