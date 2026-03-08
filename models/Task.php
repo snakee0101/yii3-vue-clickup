@@ -47,6 +47,6 @@ class Task extends ActiveRecord
 
     public function getTaskComments()
     {
-        return $this->hasMany(TaskComment::class, ['task_id' => 'id']);
+        return $this->hasMany(TaskComment::class, ['task_id' => 'id'])->orderBy(['created_at' => SORT_DESC]);
     }
 }
