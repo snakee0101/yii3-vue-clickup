@@ -1067,6 +1067,9 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
               <a href="#" @click="deleteComment(comment.id)" class="text-red-500 hover:underline hover:text-red-800">Delete</a>
             </div>
           </div>
+          <p v-if="editTaskForm.taskComments.length == 0" class="italic">
+            No comments yet
+          </p>
         </div>
         <div class="bg-white">
           <QuillEditor contentType="html" theme="snow" toolbar="full" placeholder="Comment" v-model:content="new_edit_dialog_comment" ref="commentEditor"/>
