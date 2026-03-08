@@ -10,8 +10,7 @@ class TaskComment extends ActiveRecord
     //serializer behavior - you need to include relations in serialized output
     public function fields()
     {
-        $fields = parent::fields();
-        return $fields;
+        return [...parent::fields(), 'id'];
     }
 
     public static function tableName()

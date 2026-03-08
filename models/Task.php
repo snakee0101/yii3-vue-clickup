@@ -15,6 +15,7 @@ class Task extends ActiveRecord
         $fields['tags'] = 'tags';
         $fields['attachments'] = 'attachments';
         $fields['checklists'] = 'checklists';
+        $fields['taskComments'] = 'taskComments';
         return $fields;
     }
 
@@ -42,5 +43,10 @@ class Task extends ActiveRecord
     public function getChecklists()
     {
         return $this->hasMany(Checklist::class, ['task_id' => 'id']);
+    }
+
+    public function getTaskComments()
+    {
+        return $this->hasMany(TaskComment::class, ['task_id' => 'id']);
     }
 }

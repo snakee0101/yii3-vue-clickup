@@ -491,7 +491,8 @@ let editTaskForm = reactive({
   tags: [],
   attachments: [],
   new_attachments: [],
-  checklists: []
+  checklists: [],
+  taskComments: []
 });
 
 let editTaskDialogVisible = ref(false);
@@ -508,6 +509,7 @@ function openEditTaskDialog(task_id) {
     editTaskForm.due_date = response.data.due_date;
     editTaskForm.tags = response.data.tags;
     editTaskForm.attachments = response.data.attachments;
+    editTaskForm.taskComments = response.data.taskComments;
     editTaskForm.checklists = response.data.checklists?.map(function(checklist) {
       checklist.temp_unique_id = checklist.id;
 
@@ -1035,14 +1037,11 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
           <p><FileUpload name="edit_task_attachments[]" @select="addAttachmentsToEditedTask($event)" @clear="clearAttachmentsFromEditedTask" @remove="removeAttachmentsFromEditedTask($event)" :multiple="true" :maxFileSize="10000000"></FileUpload></p>
         </div>
       </div>
-      <div class="edit-dialog-comments max-w-3xl grow bg-gray-50 flex flex-col overflow-y-scroll">
+      <div class="edit-dialog-comments max-w-3xl grow bg-gray-50 flex flex-col">
         <div class="bg-white m-2! text-center text-2xl p-2!">Comments</div>
-        <div class="grow px-4!">
-          <div class="bg-white m-2! block p-2! mb-4!">
-            comment 1
-          </div>
-          <div class="bg-white m-2! block p-2! mb-4!">
-            comment 2
+        <div class="grow px-4! overflow-y-scroll" style="max-height: 800px">
+          <div class="bg-white m-2! block p-2! mb-4!" v-for="comment in editTaskForm.taskComments" v-html="comment.comment_content">
+
           </div>
         </div>
         <div class="bg-white">
