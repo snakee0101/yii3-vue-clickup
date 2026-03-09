@@ -572,12 +572,8 @@ function editTask() {
 //change priority
 function updateTaskPriority(task, priority) {
   axios.put('http://localhost:8081/tasks/' + task.id, {
-    'task_header': task.task_header,
-    'task_content': task.task_content,
+    'update_one_field': true,
     'priority': priority,
-    'start_date': task.start_date,
-    'due_date': task.due_date,
-    'tags': task.tags
   });
 }
 
@@ -585,24 +581,16 @@ function updateTaskPriority(task, priority) {
 function updateStartDate(updated_date, task)
 {
   axios.put('http://localhost:8081/tasks/' + task.id, {
-    'task_header': task.task_header,
-    'task_content': task.task_content,
-    'priority': task.priority,
+    'update_one_field': true,
     'start_date': updated_date,
-    'due_date': task.due_date,
-    'tags': task.tags
   });
 }
 
 function updateDueDate(updated_due_date, task)
 {
   axios.put('http://localhost:8081/tasks/' + task.id, {
-    'task_header': task.task_header,
-    'task_content': task.task_content,
-    'priority': task.priority,
-    'start_date': task.start_date,
+    'update_one_field': true,
     'due_date': updated_due_date,
-    'tags': task.tags
   }).catch((error) => {
     toast.add({severity: 'error', summary: 'Error', detail: error.response.data.errors.due_date[0], life: 3000});
     task.due_date = null;
