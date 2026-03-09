@@ -108,16 +108,32 @@ class TaskController extends ActiveController
 
     public function actionUpdate($id)
     {
-        $task_header  = $_REQUEST['task_header']  ?? null;
-        $task_content = $_REQUEST['task_content'] ?? null;
-        $priority     = $_REQUEST['priority']     ?? null;
-        $due_date     = $_REQUEST['due_date']     ?? null;
-        $start_date   = $_REQUEST['start_date']   ?? null;
-        $attachments  = isset($_REQUEST['attachments']) ? json_decode($_REQUEST['attachments']) : [];
-        $checklists   = $_REQUEST['checklists'] == '[]' ? [] : json_decode($_REQUEST['checklists']);
+        //if we want to quickly update only one parameter
+        $request = Yii::$app->request->post();
 
-        $tags = isset($_REQUEST['tags'])
-            ? json_decode($_REQUEST['tags'], true)
+        $task_header  = $request['task_header']  ?? null;
+        $task_content = $request['task_content'] ?? null;
+        $priority     = $request['priority']     ?? null;
+        $due_date     = $request['due_date']     ?? null;
+        $start_date   = $request['start_date']   ?? null;
+
+        if(isset($request['update_one_field'])) {
+            $task = Task::find()->where(['id' => $id])->one();
+
+            $task->priority = array_key_exists('priority', $request) ? $request['priority'] : $task->priority;
+            $task->due_date = $due_date ?? $task->due_date;
+            $task->start_date = $start_date ?? $task->start_date;
+
+            $task->save();
+
+            return;
+        }
+
+        //must be checked after "one field" operations, otherwise we will get undefined array key error
+        $attachments  = isset($request['attachments']) ? json_decode($request['attachments']) : [];
+        $checklists   = $request['checklists'] == '[]' ? [] : json_decode($request['checklists']);
+        $tags = isset($request['tags'])
+            ? json_decode($request['tags'], true)
             : [];
 
         $model = new TaskForm();

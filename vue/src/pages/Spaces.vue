@@ -572,12 +572,8 @@ function editTask() {
 //change priority
 function updateTaskPriority(task, priority) {
   axios.put('http://localhost:8081/tasks/' + task.id, {
-    'task_header': task.task_header,
-    'task_content': task.task_content,
+    'update_one_field': true,
     'priority': priority,
-    'start_date': task.start_date,
-    'due_date': task.due_date,
-    'tags': task.tags
   });
 }
 
