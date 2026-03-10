@@ -22,7 +22,12 @@ function logout() {
         </div>
 
         <div class="logout">
-          <a href="#" @click.prevent="logout">Logout</a>
+          <div>
+            <router-link to="/settings/general">Settings</router-link>
+          </div>
+          <div>
+            <a href="#" @click.prevent="logout">Logout</a>
+          </div>
         </div>
     </aside>
 
