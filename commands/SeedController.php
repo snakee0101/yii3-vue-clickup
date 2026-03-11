@@ -5,6 +5,8 @@ namespace app\commands;
 use app\models\Checklist;
 use app\models\ChecklistItem;
 use app\models\TaskComment;
+use app\models\TaskList;
+use app\models\TaskType;
 use app\models\User;
 use Yii;
 use yii\behaviors\TimestampBehavior;
@@ -106,16 +108,18 @@ class SeedController extends Controller
     protected function seedTasks($lists)
     {
         $faker = Faker\Factory::create();
-
         $tasks = [];
 
         foreach ($lists as $list) {
+            $task_types_id_list = array_column(TaskType::find()->where(['user_id' => $list->folder->space->user_id])->asArray()->all(), 'id');
+
             for ($i = 0; $i < 2; $i++) {
                 $task = new \app\models\Task();
                 $task->list_id = $list->id;
                 $task->task_header = $faker->sentence;
                 $task->task_content = $faker->paragraph;
                 $task->priority = $faker->numberBetween(1, 4); //task with priority
+                $task->task_type_id = $faker->randomElement($task_types_id_list);
                 $task->save(false);
 
                 $tasks[] = $task;
@@ -126,6 +130,7 @@ class SeedController extends Controller
             $task->task_header = $faker->sentence;
             $task->task_content = $faker->paragraph;
             $task->priority = null; //task without priority
+            $task->task_type_id = $faker->randomElement($task_types_id_list);
             $task->save(false);
 
             $tasks[] = $task;
@@ -144,6 +149,9 @@ class SeedController extends Controller
         foreach ($tasks as $key => $task) {
             if($key % 2 == 0) continue;
 
+            $list = TaskList::find()->where(['id' => $task->list_id])->one();
+            $task_types_id_list = array_column(TaskType::find()->where(['user_id' => $list->folder->space->user_id])->asArray()->all(), 'id');
+
             for ($i = 0; $i < 2; $i++) {
                 $subtask = new \app\models\Task();
                 $subtask->list_id = $task->list_id;
@@ -151,6 +159,7 @@ class SeedController extends Controller
                 $subtask->task_content = $faker->paragraph;
                 $subtask->parent_id = $task->id;
                 $subtask->priority = $faker->numberBetween(1, 4); //subtask with priority
+                $subtask->task_type_id = $faker->randomElement($task_types_id_list);
                 $subtask->save(false);
 
                 $subtasks[] = $subtask;
@@ -162,6 +171,7 @@ class SeedController extends Controller
             $subtask->task_content = $faker->paragraph;
             $subtask->parent_id = $task->id;
             $subtask->priority = null; //subtask without priority
+            $subtask->task_type_id = $faker->randomElement($task_types_id_list);
             $subtask->save(false);
 
             $subtasks[] = $subtask;
@@ -219,12 +229,60 @@ class SeedController extends Controller
         echo "Seeding comments..." . "\n";
     }
 
+    public function seedTaskTypes($users): array
+    {
+        $task_types = [];
+
+        foreach ($users as $user)
+        {
+            $task = new \app\models\TaskType();
+            $task->type_name = 'Task';
+            $task->user_id = $user->id;
+            $task->icon_name = 'clipboard';
+            $task->icon_style = 'line';
+            $task->save();
+
+            $milestone = new \app\models\TaskType();
+            $milestone->type_name = 'Milestone';
+            $milestone->user_id = $user->id;
+            $milestone->icon_name = 'trophy';
+            $milestone->icon_style = 'line';
+            $milestone->save();
+
+            $account = new \app\models\TaskType();
+            $account->type_name = 'Account';
+            $account->user_id = $user->id;
+            $account->icon_name = 'user-circle';
+            $account->icon_style = 'line';
+            $account->save();
+
+            $form_response = new \app\models\TaskType();
+            $form_response->type_name = 'Form Response';
+            $form_response->user_id = $user->id;
+            $form_response->icon_name = 'file-check-alt';
+            $form_response->icon_style = 'line';
+            $form_response->save();
+
+            $meeting_notes = new \app\models\TaskType();
+            $meeting_notes->type_name = 'Meeting Notes';
+            $meeting_notes->user_id = $user->id;
+            $meeting_notes->icon_name = 'book-open';
+            $meeting_notes->icon_style = 'line';
+            $meeting_notes->save();
+
+            $task_types[$user->id] = [$task, $milestone, $account, $form_response, $meeting_notes];
+        }
+
+        return $task_types;
+    }
+
     public function actionIndex()
     {
         $users = $this->seedUsers();
         $spaces = $this->seedSpaces($users);
         $folders = $this->seedFolders($spaces);
         $lists = $this->seedLists($folders);
+        $this->seedTaskTypes($users);
         $tasks = $this->seedTasks($lists);
         $this->seedSubTasks($tasks);
         $this->seedChecklists($tasks);
