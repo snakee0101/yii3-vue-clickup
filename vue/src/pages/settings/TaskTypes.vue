@@ -3,9 +3,11 @@ import {ref, reactive} from 'vue';
 import {icon_objects} from '@/main.js';
 
 let new_task_type = reactive({
-  name: '',
-  icon: ''
+  name: null,
+  icon: null
 });
+
+let new_task_types_errors = ref([]);
 
 const icon_objects_normalized = icon_objects.map(function(icon_object) {
   return {
@@ -14,6 +16,28 @@ const icon_objects_normalized = icon_objects.map(function(icon_object) {
     key: icon_object[1].name + '-' + icon_object[1].style
   };
 });
+
+function createTaskType()
+{
+  const task_type_data = {
+    type_name: new_task_type.name,
+    icon_name: new_task_type.icon?.name ?? null,
+    icon_style: new_task_type.icon?.style ?? null
+  };
+
+  axios.post('http://localhost:8081/task-types', task_type_data)
+      .then((response) => {
+        new_task_types_errors.value = [];
+
+        new_task_type.name = null;
+        new_task_type.icon = null;
+
+        toast.add({severity: 'success', summary: 'Success', detail: 'Task Type created', life: 3000});
+      })
+      .catch((error) => {
+        new_task_types_errors.value = error.response.data.errors;
+      });
+}
 </script>
 
 <template>
@@ -31,10 +55,12 @@ const icon_objects_normalized = icon_objects.map(function(icon_object) {
     <div class="mb-3! flex gap-2">
       <InputText id="task_header" autocomplete="off" v-model="new_task_type.name"
                  placeholder="New Task Type Name" class="flex-auto"/>
-      <Button>Create</Button>
+      <Button @click="createTaskType">Create</Button>
     </div>
+    <p class="text-red-500 mb-2! mt-1!" v-if="new_task_types_errors['type_name']">{{ new_task_types_errors['type_name'][0] }}</p>
 
     <details open>
+      <p class="text-red-500 mb-2!" v-if="new_task_types_errors['icon_name']">{{ new_task_types_errors['icon_name'][0] }}</p>
       <summary><b>Select an icon for new task type</b></summary>
 
       <div class="icons_grid">
