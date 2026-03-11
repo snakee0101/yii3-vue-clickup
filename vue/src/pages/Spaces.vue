@@ -821,6 +821,10 @@ function formatTimestamp(timestamp) {
 
 function deleteComment(comment_id)
 {
+  if(confirm('Are you sure you want to delete a comment? Operation cannot be undone') === false) {
+    return;
+  }
+
   axios.delete('http://localhost:8081/task-comments/' + comment_id)
        .then((response) => {
          editTaskForm.taskComments.splice(editTaskForm.taskComments.indexOf(
