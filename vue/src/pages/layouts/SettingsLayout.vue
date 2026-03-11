@@ -5,7 +5,7 @@ import router from "@/router.js";
 let selectedPage = ref('');
 let settingsPages = [
   {name: 'General', path: '/settings/general'},
-  {name: 'Task Statuses', path: '/settings/task-statuses'}
+  {name: 'Task Types', path: '/settings/task-types'}
 ];
 
 //select initial route in a menu when you open the page

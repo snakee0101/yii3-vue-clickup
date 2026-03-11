@@ -5,7 +5,7 @@ import SpacesView from './pages/Spaces.vue'
 import LoginView from './pages/auth/Login.vue'
 import RegisterView from './pages/auth/Register.vue'
 import General from './pages/settings/General.vue';
-import TaskStatuses from './pages/settings/TaskStatuses.vue';
+import TaskTypes from './pages/settings/TaskTypes.vue';
 
 const routes = [
   { path: '/', component: SpacesView },
@@ -18,8 +18,8 @@ const routes = [
     component: General,
   },
   {
-    path: 'task-statuses',
-    component: TaskStatuses,
+    path: 'task-types',
+    component: TaskTypes,
   }
   ]}
 ]
