@@ -10,6 +10,7 @@ let new_task_type = reactive({
 });
 
 let new_task_types_errors = ref([]);
+let task_types = reactive([]);
 
 const icon_objects_normalized = icon_objects.map(function(icon_object) {
   return {
@@ -42,20 +43,31 @@ function createTaskType()
         new_task_types_errors.value = error.response.data.errors;
       });
 }
+
+//Load task types
+axios.get('http://localhost:8081/task-types')
+    .then((response) => task_types.push(...response.data) );
+
+function deleteTaskType(task_type_id)
+{
+  alert('deleted ' + task_type_id);
+}
 </script>
 
 <template>
 <settings-layout>
   <Toast position="top-left"/>
-  <div>
-    this is a content of a TASK TYPES settings page using slots
-  </div>
-  <div>
-    there will be icons shown
-  </div>
-  <div>
 
-    <h2 class="font-bold text-xl mt-5! mb-2!">Create new task type</h2>
+  <h2 class="font-bold text-xl mb-2!">Existing Task Types</h2>
+
+  <div v-for="taskType in task_types" :key="taskType.id" class="bg-white flex mb-3! p-2! justify-between items-center">
+    <p class="flex items-center gap-3"><unicon :name="taskType.icon_name" :icon-style="taskType.icon_style" height="20" width="20"></unicon> {{ taskType.type_name }}</p>
+    <Button class="ml-2 shrink-0 border-0! bg-red-700! hover:bg-red-500! self-stretch" @click="() => deleteTaskType(taskType.id)">
+      <unicon name="trash" fill="#fff"></unicon>
+    </Button>
+  </div>
+  <div>
+    <h2 class="font-bold text-xl mt-5! mb-2!">Create new Task Type</h2>
 
     <div class="mb-3! flex gap-2">
       <InputText id="task_header" autocomplete="off" v-model="new_task_type.name"

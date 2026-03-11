@@ -37,9 +37,15 @@ class TaskTypeController extends ActiveController
     public function actions()
     {
         $actions = parent::actions();
-        unset($actions['create']);
+        unset($actions['create'], $actions['index']);
         return $actions;
     }
+
+    public function actionIndex()
+    {
+        return TaskType::find()->where(['user_id' => Yii::$app->user->id])->all();
+    }
+
 
     public function actionCreate()
     {
