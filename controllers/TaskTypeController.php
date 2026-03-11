@@ -55,14 +55,15 @@ class TaskTypeController extends ActiveController
 
             return ['errors' => $model->errors];
         }
-//
-//        //This IS ActiveRecord model that saves data to DB
-//        $list = new TaskList();
-//        $list->list_name = $list_name;
-//        $list->description = $description;
-//        $list->folder_id = $folder_id;
-//        $list->save();
-//
-//        return $list;
+
+        //This IS ActiveRecord model that saves data to DB
+        $task_type = new TaskType();
+        $task_type->type_name = $type_name;
+        $task_type->icon_name = $icon_name;
+        $task_type->icon_style = $icon_style;
+        $task_type->user_id = Yii::$app->user->id;
+        $task_type->save();
+
+        return $task_type;
     }
 }

@@ -1,6 +1,8 @@
 <script setup>
 import {ref, reactive} from 'vue';
 import {icon_objects} from '@/main.js';
+import {useToast} from "primevue/usetoast";
+const toast = useToast();
 
 let new_task_type = reactive({
   name: null,
@@ -35,6 +37,8 @@ function createTaskType()
         toast.add({severity: 'success', summary: 'Success', detail: 'Task Type created', life: 3000});
       })
       .catch((error) => {
+        toast.add({severity: 'error', summary: 'Error', detail: 'Entered data is invalid - please check the errors', life: 3000});
+
         new_task_types_errors.value = error.response.data.errors;
       });
 }
@@ -42,6 +46,7 @@ function createTaskType()
 
 <template>
 <settings-layout>
+  <Toast position="top-left"/>
   <div>
     this is a content of a TASK TYPES settings page using slots
   </div>
@@ -72,7 +77,6 @@ function createTaskType()
       </div>
     </details>
   </div>
-  <p>{{ new_task_type }}</p>
 </settings-layout>
 </template>
 
