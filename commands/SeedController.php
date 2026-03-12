@@ -233,49 +233,26 @@ class SeedController extends Controller
     {
         $task_types = [];
 
+        $standard_task_types = require Yii::getAlias('@app/config/task_types.php');
+
         foreach ($users as $user)
         {
-            $task = new \app\models\TaskType();
-            $task->type_name = 'Task';
-            $task->user_id = $user->id;
-            $task->icon_name = 'clipboard';
-            $task->icon_style = 'line';
-            $task->is_default = true;
-            $task->save();
+            $task_types[$user->id] = [];
 
-            $milestone = new \app\models\TaskType();
-            $milestone->type_name = 'Milestone';
-            $milestone->user_id = $user->id;
-            $milestone->icon_name = 'trophy';
-            $milestone->icon_style = 'line';
-            $milestone->is_default = true;
-            $milestone->save();
+            foreach ($standard_task_types as $task_type_data)
+            {
+                $task_type = new \app\models\TaskType();
+                $task_type->user_id = $user->id;
 
-            $account = new \app\models\TaskType();
-            $account->type_name = 'Account';
-            $account->user_id = $user->id;
-            $account->icon_name = 'user-circle';
-            $account->icon_style = 'line';
-            $account->is_default = true;
-            $account->save();
+                foreach ($task_type_data as $column => $value)
+                {
+                    $task_type->{$column} = $value;
+                }
 
-            $form_response = new \app\models\TaskType();
-            $form_response->type_name = 'Form Response';
-            $form_response->user_id = $user->id;
-            $form_response->icon_name = 'file-check-alt';
-            $form_response->icon_style = 'line';
-            $form_response->is_default = true;
-            $form_response->save();
+                $task_type->save();
 
-            $meeting_notes = new \app\models\TaskType();
-            $meeting_notes->type_name = 'Meeting Notes';
-            $meeting_notes->user_id = $user->id;
-            $meeting_notes->icon_name = 'book-open';
-            $meeting_notes->icon_style = 'line';
-            $meeting_notes->is_default = true;
-            $meeting_notes->save();
-
-            $task_types[$user->id] = [$task, $milestone, $account, $form_response, $meeting_notes];
+                $task_types[$user->id][] = $task_type;
+            }
         }
 
         return $task_types;
