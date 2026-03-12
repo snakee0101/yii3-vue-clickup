@@ -240,6 +240,7 @@ class SeedController extends Controller
             $task->user_id = $user->id;
             $task->icon_name = 'clipboard';
             $task->icon_style = 'line';
+            $task->is_default = true;
             $task->save();
 
             $milestone = new \app\models\TaskType();
@@ -247,6 +248,7 @@ class SeedController extends Controller
             $milestone->user_id = $user->id;
             $milestone->icon_name = 'trophy';
             $milestone->icon_style = 'line';
+            $milestone->is_default = true;
             $milestone->save();
 
             $account = new \app\models\TaskType();
@@ -254,6 +256,7 @@ class SeedController extends Controller
             $account->user_id = $user->id;
             $account->icon_name = 'user-circle';
             $account->icon_style = 'line';
+            $account->is_default = true;
             $account->save();
 
             $form_response = new \app\models\TaskType();
@@ -261,6 +264,7 @@ class SeedController extends Controller
             $form_response->user_id = $user->id;
             $form_response->icon_name = 'file-check-alt';
             $form_response->icon_style = 'line';
+            $form_response->is_default = true;
             $form_response->save();
 
             $meeting_notes = new \app\models\TaskType();
@@ -268,6 +272,7 @@ class SeedController extends Controller
             $meeting_notes->user_id = $user->id;
             $meeting_notes->icon_name = 'book-open';
             $meeting_notes->icon_style = 'line';
+            $meeting_notes->is_default = true;
             $meeting_notes->save();
 
             $task_types[$user->id] = [$task, $milestone, $account, $form_response, $meeting_notes];

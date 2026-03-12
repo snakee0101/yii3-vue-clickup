@@ -18,6 +18,7 @@ class m260214_111028_create_task_types_table extends Migration
             'user_id' => $this->integer()->notNull(),
             'icon_name' => $this->string()->notNull(),
             'icon_style' => $this->string()->notNull(),
+            'is_default' => $this->boolean()->notNull()->defaultValue(false),
         ]);
 
         $this->addForeignKey('fk_task_type_user_id', 'task_types', 'user_id', 'users', 'id', 'CASCADE');
