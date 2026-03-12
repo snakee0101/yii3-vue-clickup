@@ -137,6 +137,7 @@ function reloadSpaces() {
                   priority: task.priority,
                   start_date: task.start_date,
                   due_date: task.due_date,
+                  task_type_id: task.task_type_id,
                   tags: task.tags.map(tag => ({
                     'id': tag.id,
                     'tag_name': tag.tag_name
@@ -153,6 +154,7 @@ function reloadSpaces() {
                     priority: subtask.priority,
                     start_date: subtask.start_date,
                     due_date: subtask.due_date,
+                    task_type_id: subtask.task_type_id,
                     tags: subtask.tags.map(tag => ({
                       'id': tag.id,
                       'tag_name': tag.tag_name
@@ -500,6 +502,7 @@ let editTaskForm = reactive({
   priority: null,
   start_date: null,
   due_date: null,
+  task_type_id: null,
   tags: [],
   attachments: [],
   new_attachments: [],
@@ -522,6 +525,7 @@ function openEditTaskDialog(task_id) {
     editTaskForm.tags = response.data.tags;
     editTaskForm.attachments = response.data.attachments;
     editTaskForm.taskComments = response.data.taskComments;
+    editTaskForm.task_type_id = response.data.task_type_id;
     editTaskForm.checklists = response.data.checklists?.map(function(checklist) {
       checklist.temp_unique_id = checklist.id;
 
@@ -546,6 +550,7 @@ function editTask() {
   appendIfNotNull(editTaskFormData, 'priority', editTaskForm.priority);
   appendIfNotNull(editTaskFormData, 'start_date', editTaskForm.start_date);
   appendIfNotNull(editTaskFormData, 'due_date', editTaskForm.due_date);
+  appendIfNotNull(editTaskFormData, 'task_type_id', editTaskForm.task_type_id);
   appendIfNotNull(editTaskFormData, 'tags', JSON.stringify(editTaskForm.tags));
   appendIfNotNull(editTaskFormData, 'attachments', JSON.stringify(editTaskForm.attachments));
   appendIfNotNull(editTaskFormData, 'checklists', JSON.stringify(editTaskForm.checklists));
@@ -572,6 +577,7 @@ function editTask() {
         editTaskForm.attachments = [];
         editTaskForm.new_attachments = [];
         editTaskForm.checklists = [];
+        editTaskForm.task_type_id = null;
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task changed', life: 3000});
         reloadSpaces();
@@ -984,7 +990,7 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
           <InputText id="edit_task_header" class="flex-auto" autocomplete="off" v-model="editTaskForm.task_header"
                      placeholder="Task name"/>
         </div>
-        <p class="text-red-500" v-if="editTaskErrors['task_header']">{{ editTaskErrors.task_header[0] }}</p>
+        <p class="text-red-500" v-if="editTaskErrors.task_header">{{ editTaskErrors.task_header[0] }}</p>
         <div class="mt-4!">
           <QuillEditor contentType="html" theme="snow" toolbar="full" placeholder="Task description" v-model:content="editTaskForm.task_content" />
         </div>
@@ -1009,6 +1015,32 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
                 <unicon name="tachometer-fast" width="20" height="20"
                         :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
                 <p class="ml-2!">{{ slotProps.option.label }}</p>
+              </div>
+            </template>
+          </Select>
+
+          <p>Task Type</p>
+          <Select v-model="editTaskForm.task_type_id" :options="task_types" optionLabel="type_name" optionValue="id"
+                  class="w-full md:w-56">
+            <template #value="slotProps">
+              <div v-if="slotProps.value" class="flex items-center">
+                <unicon
+                    :name="task_types.find(t => t.id === slotProps.value)?.icon_name"
+                    width="20"
+                    height="20"
+                    fill="#000"
+                    :icon-style="task_types.find(t => t.id === slotProps.value)?.icon_style"
+                />
+                <p class="ml-2!">
+                  {{ task_types.find(t => t.id === slotProps.value)?.type_name }}
+                </p>
+              </div>
+            </template>
+            <template #option="slotProps">
+              <div class="flex items-center">
+                <unicon :name="slotProps.option.icon_name" width="20" height="20"
+                        fill="#000" :icon-style="slotProps.option.icon_style"></unicon>
+                <p class="ml-2!">{{ slotProps.option.type_name }}</p>
               </div>
             </template>
           </Select>
