@@ -57,6 +57,7 @@ class TaskController extends ActiveController
         $priority     = $post['priority']     ?? null;
         $due_date     = $post['due_date']     ?? null;
         $start_date   = $post['start_date']   ?? null;
+        $task_type_id = $post['task_type_id'];
         $tags         = $post['tags'] == '[]' ? [] : json_decode($post['tags']);
         $checklists   = $post['checklists'] == '[]' ? [] : json_decode($post['checklists']);
 
@@ -81,6 +82,7 @@ class TaskController extends ActiveController
         $task->priority = $priority;
         $task->due_date = $due_date;
         $task->start_date = $start_date;
+        $task->task_type_id = $task_type_id;
         $task->save();
 
         //process associated tags
