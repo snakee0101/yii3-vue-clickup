@@ -13,6 +13,7 @@ use yii\behaviors\TimestampBehavior;
 use yii\console\Controller;
 use yii\console\ExitCode;
 use Faker;
+use function \utils\seedTaskTypesForAUser;
 
 class SeedController extends Controller
 {
@@ -233,26 +234,9 @@ class SeedController extends Controller
     {
         $task_types = [];
 
-        $standard_task_types = require Yii::getAlias('@app/config/task_types.php');
-
         foreach ($users as $user)
         {
-            $task_types[$user->id] = [];
-
-            foreach ($standard_task_types as $task_type_data)
-            {
-                $task_type = new \app\models\TaskType();
-                $task_type->user_id = $user->id;
-
-                foreach ($task_type_data as $column => $value)
-                {
-                    $task_type->{$column} = $value;
-                }
-
-                $task_type->save();
-
-                $task_types[$user->id][] = $task_type;
-            }
+            $task_types[$user->id] = seedTaskTypesForAUser($user->id);
         }
 
         return $task_types;
