@@ -290,6 +290,7 @@ function openCreateTaskDialog(taskList, parent_id) {
   createTaskDialogVisible.value = true;
   selectedTaskListId.value = taskList.key.split('-')[1];
 
+  createTaskForm.task_type_id = task_types.find(task_type => task_type.type_name == 'Task').id;
   createTaskForm.parent_id = parent_id;
 }
 
