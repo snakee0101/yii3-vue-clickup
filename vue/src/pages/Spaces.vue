@@ -54,7 +54,6 @@ let createListForm = reactive({
 });
 const createListErrors = ref({});
 
-
 function createSpace() {
   axios.post('http://localhost:8081/spaces', createSpaceForm)
       .then((response) => {
@@ -71,6 +70,15 @@ function createSpace() {
         createSpaceErrors.value = error.response.data.errors;
       });
 }
+
+//preload task types
+let task_types = reactive([]);
+
+axios.get('http://localhost:8081/task-types')
+    .then((response) => {
+      task_types.push(...response.data);
+      console.log(task_types);
+    });
 
 //reload spaces
 const spaces = ref([]);
@@ -274,7 +282,8 @@ let createTaskForm = reactive({
   due_date: null,
   tags: [],
   attachments: [],
-  checklists: []
+  checklists: [],
+  task_type_id: null
 });
 
 function openCreateTaskDialog(taskList, parent_id) {
@@ -313,6 +322,7 @@ function createTask() {
   appendIfNotNull(createTaskFormData, 'priority', createTaskForm.priority);
   appendIfNotNull(createTaskFormData, 'start_date', createTaskForm.start_date);
   appendIfNotNull(createTaskFormData, 'due_date', createTaskForm.due_date);
+  appendIfNotNull(createTaskFormData, 'task_type_id', createTaskForm.task_type_id);
   appendIfNotNull(createTaskFormData, 'tags', JSON.stringify(createTaskForm.tags));
   appendIfNotNull(createTaskFormData, 'checklists', JSON.stringify(createTaskForm.checklists));
 
@@ -333,6 +343,7 @@ function createTask() {
         createTaskForm.start_date = null;
         createTaskForm.due_date = null;
         createTaskForm.tags = [];
+        createTaskForm.task_type_id = null;
         createTaskForm.attachments = [];
         createTaskForm.checklists = [];
 
@@ -873,6 +884,32 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
               <unicon name="tachometer-fast" width="20" height="20"
                       :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
               <p class="ml-2!">{{ slotProps.option.label }}</p>
+            </div>
+          </template>
+        </Select>
+
+        <p>Task Type</p>
+        <Select v-model="createTaskForm.task_type_id" :options="task_types" optionLabel="type_name" optionValue="id"
+                class="w-full md:w-56">
+          <template #value="slotProps">
+            <div v-if="slotProps.value" class="flex items-center">
+              <unicon
+                  :name="task_types.find(t => t.id === slotProps.value)?.icon_name"
+                  width="20"
+                  height="20"
+                  fill="#000"
+                  :icon-style="task_types.find(t => t.id === slotProps.value)?.icon_style"
+              />
+              <p class="ml-2!">
+                {{ task_types.find(t => t.id === slotProps.value)?.type_name }}
+              </p>
+            </div>
+          </template>
+          <template #option="slotProps">
+            <div class="flex items-center">
+              <unicon :name="slotProps.option.icon_name" width="20" height="20"
+                      fill="#000" :icon-style="slotProps.option.icon_style"></unicon>
+              <p class="ml-2!">{{ slotProps.option.type_name }}</p>
             </div>
           </template>
         </Select>
