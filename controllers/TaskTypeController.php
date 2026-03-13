@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\Task;
 use app\models\TaskList;
 use app\models\TaskListForm;
 use app\models\TaskType;
@@ -37,7 +38,7 @@ class TaskTypeController extends ActiveController
     public function actions()
     {
         $actions = parent::actions();
-        unset($actions['create'], $actions['index']);
+        unset($actions['create'], $actions['index'], $actions['delete']);
         return $actions;
     }
 
@@ -71,5 +72,15 @@ class TaskTypeController extends ActiveController
         $task_type->save();
 
         return $task_type;
+    }
+
+    public function actionDelete($id)
+    {
+        //reset all tasks that have the task type we are deleting to default task type
+        $default_task_type = TaskType::find()->where(['user_id' => Yii::$app->user->id, 'type_name' => 'Task'])->one();
+        Task::updateAll(['task_type_id' => $default_task_type->id], ['task_type_id' => $id]);
+
+        //before we delete the task itself
+        TaskType::deleteAll(['id' => $id]);
     }
 }

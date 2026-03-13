@@ -53,7 +53,12 @@ let systemTaskTypes = computed(() => task_types.filter(task_type => task_type.is
 
 function deleteTaskType(task_type_id)
 {
-  alert('deleted ' + task_type_id);
+  axios.delete('http://localhost:8081/task-types/' + task_type_id)
+      .then((response) => {
+        task_types.splice(task_types.indexOf(task_types.find(task_type => task_type.id == task_type_id)), 1);
+
+        toast.add({severity: 'success', summary: 'Success', detail: 'Task Type was deleted', life: 3000});
+      });
 }
 </script>
 
@@ -75,6 +80,9 @@ function deleteTaskType(task_type_id)
       <unicon name="trash" fill="#fff"></unicon>
     </Button>
   </div>
+  <p class="italic" v-empty>
+    No user-defined task types yet
+  </p>
 
   <div>
     <h2 class="font-bold text-xl mt-5! mb-2!">Create new Task Type</h2>
