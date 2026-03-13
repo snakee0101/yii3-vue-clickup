@@ -111,7 +111,7 @@ class TaskController extends ActiveController
     public function actionUpdate($id)
     {
         //if we want to quickly update only one parameter
-        $request = $_REQUEST;
+        $request = Yii::$app->request->post();
 
         $task_header  = $request['task_header']  ?? null;
         $task_content = $request['task_content'] ?? null;
@@ -126,6 +126,7 @@ class TaskController extends ActiveController
             $task->priority = array_key_exists('priority', $request) ? $request['priority'] : $task->priority;
             $task->due_date = $due_date ?? $task->due_date;
             $task->start_date = $start_date ?? $task->start_date;
+            $task->task_type_id = $task_type_id ?? $task->task_type_id;
 
             $task->save();
 

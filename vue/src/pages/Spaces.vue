@@ -616,6 +616,18 @@ function updateDueDate(updated_due_date, task)
   });
 }
 
+function updateTaskType(task_id, task_type_id)
+{
+  axios.post('http://localhost:8081/tasks/' + task_id, {
+    'update_one_field': true,
+    'task_type_id': task_type_id,
+  }, {
+    headers: {
+      'X-HTTP-Method-Override': 'PUT'
+    }
+  });
+}
+
 function detachTag(task_id, tag_id)
 {
   axios.post('http://localhost:8081/tags/detach', {
@@ -1344,15 +1356,15 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
             <Column header="Task Type + Name" expander style="" key="task.data.id">
               <template #body="slotProps">
                 <Select v-model="slotProps.node.data.task_type_id" :options="task_types" optionLabel="type_name" optionValue="id"
-                        class="w-18">
-                  <template #value="slotProps">
-                    <div v-if="slotProps.value" class="flex items-center">
+                        class="w-18" @update:modelValue="(value) => updateTaskType(slotProps.node.data.id, value)">
+                  <template #value="slotProps2">
+                    <div v-if="slotProps2.value" class="flex items-center">
                       <unicon
-                          :name="task_types.find(t => t.id === slotProps.value)?.icon_name"
+                          :name="task_types.find(t => t.id === slotProps2.value)?.icon_name"
                           width="20"
                           height="20"
                           fill="#000"
-                          :icon-style="task_types.find(t => t.id === slotProps.value)?.icon_style"
+                          :icon-style="task_types.find(t => t.id === slotProps2.value)?.icon_style"
                       />
                     </div>
                   </template>
