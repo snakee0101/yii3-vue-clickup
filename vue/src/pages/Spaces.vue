@@ -232,6 +232,7 @@ function processSelectedTreeItem(selectedItem) {
     });
   });
 
+  //group and show tasks by lists - show/flatten all lists inside selected folder/space
   selectedLists.value = lists;
 }
 
@@ -1340,8 +1341,30 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
           </div>
 
           <TreeTable :value="taskList.tasks" tableStyle="min-width: 50rem">
-            <Column header="Name" expander style="" key="task.data.id">
+            <Column header="Task Type + Name" expander style="" key="task.data.id">
               <template #body="slotProps">
+                <Select v-model="slotProps.node.data.task_type_id" :options="task_types" optionLabel="type_name" optionValue="id"
+                        class="w-18">
+                  <template #value="slotProps">
+                    <div v-if="slotProps.value" class="flex items-center">
+                      <unicon
+                          :name="task_types.find(t => t.id === slotProps.value)?.icon_name"
+                          width="20"
+                          height="20"
+                          fill="#000"
+                          :icon-style="task_types.find(t => t.id === slotProps.value)?.icon_style"
+                      />
+                    </div>
+                  </template>
+                  <template #option="slotProps">
+                    <div class="flex items-center">
+                      <unicon :name="slotProps.option.icon_name" width="20" height="20"
+                              fill="#000" :icon-style="slotProps.option.icon_style"></unicon>
+                      <p class="ml-2!">{{ slotProps.option.type_name }}</p>
+                    </div>
+                  </template>
+                </Select>
+
                 <a href="#" @click.prevent="() => openEditTaskDialog(slotProps.node.data.id)"
                    class="task_link">{{ slotProps.node.data.task_header }}</a>
               </template>
