@@ -1,5 +1,5 @@
 <script setup>
-import {ref, reactive} from 'vue';
+import {ref, reactive, computed} from 'vue';
 import {icon_objects} from '@/main.js';
 import {useToast} from "primevue/usetoast";
 const toast = useToast();
@@ -48,6 +48,9 @@ function createTaskType()
 axios.get('http://localhost:8081/task-types')
     .then((response) => task_types.push(...response.data) );
 
+let userDefinedTaskTypes = computed(() => task_types.filter(task_type => task_type.is_default == false));
+let systemTaskTypes = computed(() => task_types.filter(task_type => task_type.is_default == true));
+
 function deleteTaskType(task_type_id)
 {
   alert('deleted ' + task_type_id);
@@ -58,14 +61,21 @@ function deleteTaskType(task_type_id)
 <settings-layout>
   <Toast position="top-left"/>
 
-  <h2 class="font-bold text-xl mb-2!">Existing Task Types</h2>
+  <h2 class="font-bold text-xl mb-2!">System Task Types</h2>
 
-  <div v-for="taskType in task_types" :key="taskType.id" class="bg-white flex mb-3! p-2! justify-between items-center">
+  <div v-for="taskType in systemTaskTypes" :key="taskType.id" class="bg-white flex mb-3! p-2! justify-between items-center">
+    <p class="flex items-center gap-3"><unicon :name="taskType.icon_name" :icon-style="taskType.icon_style" height="20" width="20"></unicon> {{ taskType.type_name }}</p>
+  </div>
+
+  <h2 class="font-bold text-xl mb-2! mt-4!">User-Defined Task Types</h2>
+
+  <div v-for="taskType in userDefinedTaskTypes" :key="taskType.id" class="bg-white flex mb-3! p-2! justify-between items-center">
     <p class="flex items-center gap-3"><unicon :name="taskType.icon_name" :icon-style="taskType.icon_style" height="20" width="20"></unicon> {{ taskType.type_name }}</p>
     <Button class="ml-2 shrink-0 border-0! bg-red-700! hover:bg-red-500! self-stretch" @click="() => deleteTaskType(taskType.id)">
       <unicon name="trash" fill="#fff"></unicon>
     </Button>
   </div>
+
   <div>
     <h2 class="font-bold text-xl mt-5! mb-2!">Create new Task Type</h2>
 
