@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\EditTaskTypeForm;
 use app\models\Task;
 use app\models\TaskList;
 use app\models\TaskListForm;
@@ -38,7 +39,7 @@ class TaskTypeController extends ActiveController
     public function actions()
     {
         $actions = parent::actions();
-        unset($actions['create'], $actions['index'], $actions['delete']);
+        unset($actions['create'], $actions['index'], $actions['delete'], $actions['update']);
         return $actions;
     }
 
@@ -69,6 +70,31 @@ class TaskTypeController extends ActiveController
         $task_type->icon_name = $icon_name;
         $task_type->icon_style = $icon_style;
         $task_type->user_id = Yii::$app->user->id;
+        $task_type->save();
+
+        return $task_type;
+    }
+
+    public function actionUpdate($id)
+    {
+        ['type_name' => $type_name, 'icon_name' => $icon_name, 'icon_style' => $icon_style] = Yii::$app->request->post();
+
+        $model = new EditTaskTypeForm();
+        $model->type_name = $type_name;
+        $model->icon_name = $icon_name;
+
+        if ($model->validate() === false) {
+            Yii::$app->response->statusCode = 422;
+
+            return ['errors' => $model->errors];
+        }
+
+        //This IS ActiveRecord model that saves data to DB
+        $task_type = TaskType::findOne($id);
+        $task_type->type_name = $type_name;
+        $task_type->icon_name = $icon_name;
+        $task_type->user_id = Yii::$app->user->id;
+        $task_type->icon_style = $icon_style;
         $task_type->save();
 
         return $task_type;
