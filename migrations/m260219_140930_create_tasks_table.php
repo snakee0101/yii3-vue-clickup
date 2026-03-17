@@ -21,10 +21,12 @@ class m260219_140930_create_tasks_table extends Migration
             'priority' => $this->tinyInteger()->unsigned(),
             'start_date' => $this->date()->null(),
             'due_date' => $this->date()->null(),
+            'task_type_id' => $this->integer()->notNull(),
         ]);
 
         $this->addForeignKey('fk-task-list_id', 'tasks', 'list_id', 'lists','id', 'CASCADE', 'CASCADE');
         $this->addForeignKey('fk-parent_task_id', 'tasks', 'parent_id', 'tasks','id', 'CASCADE', 'CASCADE');
+        $this->addForeignKey('fk-tasks-task-type-id', 'tasks', 'task_type_id', 'task_types','id', 'CASCADE', 'CASCADE');
     }
 
     /**
@@ -32,6 +34,7 @@ class m260219_140930_create_tasks_table extends Migration
      */
     public function safeDown()
     {
+        $this->dropForeignKey('fk-tasks-task-type-id', 'tasks');
         $this->dropForeignKey('fk-parent_task_id', 'tasks');
         $this->dropForeignKey('fk-task-list_id', 'tasks');
         $this->dropTable('tasks');
