@@ -48,6 +48,11 @@
             "yii\\composer\\Installer::postInstall"
         ]
     },
+    "autoload": {
+        "files": [
+            "utils/seedTaskTypesForAUser.php"
+        ]
+    },
     "extra": {
         "yii\\composer\\Installer::postCreateProject": {
             "setPermission": [

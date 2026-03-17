@@ -6,6 +6,7 @@ use app\models\User;
 use Yii;
 use yii\filters\Cors;
 use yii\rest\Controller;
+use function utils\seedTaskTypesForAUser;
 
 class UserController extends Controller
 {
@@ -34,6 +35,9 @@ class UserController extends Controller
         $user->password_hash = Yii::$app->getSecurity()->generatePasswordHash($model->password);
         $user->access_token = Yii::$app->security->generateRandomString();
         $user->save();
+
+        //seed the task types
+        seedTaskTypesForAUser($user->id);
 
         //Login this user immediately
         Yii::$app->user->login($user, duration: 3600 * 24 * 30);

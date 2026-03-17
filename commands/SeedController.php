@@ -5,12 +5,15 @@ namespace app\commands;
 use app\models\Checklist;
 use app\models\ChecklistItem;
 use app\models\TaskComment;
+use app\models\TaskList;
+use app\models\TaskType;
 use app\models\User;
 use Yii;
 use yii\behaviors\TimestampBehavior;
 use yii\console\Controller;
 use yii\console\ExitCode;
 use Faker;
+use function \utils\seedTaskTypesForAUser;
 
 class SeedController extends Controller
 {
@@ -106,16 +109,18 @@ class SeedController extends Controller
     protected function seedTasks($lists)
     {
         $faker = Faker\Factory::create();
-
         $tasks = [];
 
         foreach ($lists as $list) {
+            $task_types_id_list = array_column(TaskType::find()->where(['user_id' => $list->folder->space->user_id])->asArray()->all(), 'id');
+
             for ($i = 0; $i < 2; $i++) {
                 $task = new \app\models\Task();
                 $task->list_id = $list->id;
                 $task->task_header = $faker->sentence;
                 $task->task_content = $faker->paragraph;
                 $task->priority = $faker->numberBetween(1, 4); //task with priority
+                $task->task_type_id = $faker->randomElement($task_types_id_list);
                 $task->save(false);
 
                 $tasks[] = $task;
@@ -126,6 +131,7 @@ class SeedController extends Controller
             $task->task_header = $faker->sentence;
             $task->task_content = $faker->paragraph;
             $task->priority = null; //task without priority
+            $task->task_type_id = $faker->randomElement($task_types_id_list);
             $task->save(false);
 
             $tasks[] = $task;
@@ -144,6 +150,9 @@ class SeedController extends Controller
         foreach ($tasks as $key => $task) {
             if($key % 2 == 0) continue;
 
+            $list = TaskList::find()->where(['id' => $task->list_id])->one();
+            $task_types_id_list = array_column(TaskType::find()->where(['user_id' => $list->folder->space->user_id])->asArray()->all(), 'id');
+
             for ($i = 0; $i < 2; $i++) {
                 $subtask = new \app\models\Task();
                 $subtask->list_id = $task->list_id;
@@ -151,6 +160,7 @@ class SeedController extends Controller
                 $subtask->task_content = $faker->paragraph;
                 $subtask->parent_id = $task->id;
                 $subtask->priority = $faker->numberBetween(1, 4); //subtask with priority
+                $subtask->task_type_id = $faker->randomElement($task_types_id_list);
                 $subtask->save(false);
 
                 $subtasks[] = $subtask;
@@ -162,6 +172,7 @@ class SeedController extends Controller
             $subtask->task_content = $faker->paragraph;
             $subtask->parent_id = $task->id;
             $subtask->priority = null; //subtask without priority
+            $subtask->task_type_id = $faker->randomElement($task_types_id_list);
             $subtask->save(false);
 
             $subtasks[] = $subtask;
@@ -219,12 +230,25 @@ class SeedController extends Controller
         echo "Seeding comments..." . "\n";
     }
 
+    public function seedTaskTypes($users): array
+    {
+        $task_types = [];
+
+        foreach ($users as $user)
+        {
+            $task_types[$user->id] = seedTaskTypesForAUser($user->id);
+        }
+
+        return $task_types;
+    }
+
     public function actionIndex()
     {
         $users = $this->seedUsers();
         $spaces = $this->seedSpaces($users);
         $folders = $this->seedFolders($spaces);
         $lists = $this->seedLists($folders);
+        $this->seedTaskTypes($users);
         $tasks = $this->seedTasks($lists);
         $this->seedSubTasks($tasks);
         $this->seedChecklists($tasks);

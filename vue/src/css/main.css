@@ -299,3 +299,10 @@ body {
 .edit-dialog-comments .ql-container {
     height: auto!important;
 }
+
+.icons_grid .p-selectbutton
+{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-auto-flow: row;
+}

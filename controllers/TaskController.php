@@ -57,6 +57,7 @@ class TaskController extends ActiveController
         $priority     = $post['priority']     ?? null;
         $due_date     = $post['due_date']     ?? null;
         $start_date   = $post['start_date']   ?? null;
+        $task_type_id = $post['task_type_id'];
         $tags         = $post['tags'] == '[]' ? [] : json_decode($post['tags']);
         $checklists   = $post['checklists'] == '[]' ? [] : json_decode($post['checklists']);
 
@@ -81,6 +82,7 @@ class TaskController extends ActiveController
         $task->priority = $priority;
         $task->due_date = $due_date;
         $task->start_date = $start_date;
+        $task->task_type_id = $task_type_id;
         $task->save();
 
         //process associated tags
@@ -116,6 +118,7 @@ class TaskController extends ActiveController
         $priority     = $request['priority']     ?? null;
         $due_date     = $request['due_date']     ?? null;
         $start_date   = $request['start_date']   ?? null;
+        $task_type_id = $request['task_type_id'] ?? null;
 
         if(isset($request['update_one_field'])) {
             $task = Task::find()->where(['id' => $id])->one();
@@ -123,6 +126,7 @@ class TaskController extends ActiveController
             $task->priority = array_key_exists('priority', $request) ? $request['priority'] : $task->priority;
             $task->due_date = $due_date ?? $task->due_date;
             $task->start_date = $start_date ?? $task->start_date;
+            $task->task_type_id = $task_type_id ?? $task->task_type_id;
 
             $task->save();
 
@@ -131,7 +135,12 @@ class TaskController extends ActiveController
 
         //must be checked after "one field" operations, otherwise we will get undefined array key error
         $attachments  = isset($request['attachments']) ? json_decode($request['attachments']) : [];
-        $checklists   = $request['checklists'] == '[]' ? [] : json_decode($request['checklists']);
+        $checklists = [];
+
+        if(array_key_exists('checklists', $request)) {
+            $checklists   = $request['checklists'] == '[]' ? [] : json_decode($request['checklists']);
+        }
+
         $tags = isset($request['tags'])
             ? json_decode($request['tags'], true)
             : [];
@@ -155,6 +164,7 @@ class TaskController extends ActiveController
         $task->priority = $priority;
         $task->due_date = $due_date;
         $task->start_date = $start_date;
+        $task->task_type_id = $task_type_id;
         $task->save();
 
         //process associated tags

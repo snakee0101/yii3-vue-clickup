@@ -54,7 +54,6 @@ let createListForm = reactive({
 });
 const createListErrors = ref({});
 
-
 function createSpace() {
   axios.post('http://localhost:8081/spaces', createSpaceForm)
       .then((response) => {
@@ -71,6 +70,15 @@ function createSpace() {
         createSpaceErrors.value = error.response.data.errors;
       });
 }
+
+//preload task types
+let task_types = reactive([]);
+
+axios.get('http://localhost:8081/task-types')
+    .then((response) => {
+      task_types.push(...response.data);
+      console.log(task_types);
+    });
 
 //reload spaces
 const spaces = ref([]);
@@ -129,6 +137,7 @@ function reloadSpaces() {
                   priority: task.priority,
                   start_date: task.start_date,
                   due_date: task.due_date,
+                  task_type_id: task.task_type_id,
                   tags: task.tags.map(tag => ({
                     'id': tag.id,
                     'tag_name': tag.tag_name
@@ -145,6 +154,7 @@ function reloadSpaces() {
                     priority: subtask.priority,
                     start_date: subtask.start_date,
                     due_date: subtask.due_date,
+                    task_type_id: subtask.task_type_id,
                     tags: subtask.tags.map(tag => ({
                       'id': tag.id,
                       'tag_name': tag.tag_name
@@ -222,6 +232,7 @@ function processSelectedTreeItem(selectedItem) {
     });
   });
 
+  //group and show tasks by lists - show/flatten all lists inside selected folder/space
   selectedLists.value = lists;
 }
 
@@ -274,13 +285,15 @@ let createTaskForm = reactive({
   due_date: null,
   tags: [],
   attachments: [],
-  checklists: []
+  checklists: [],
+  task_type_id: null
 });
 
 function openCreateTaskDialog(taskList, parent_id) {
   createTaskDialogVisible.value = true;
   selectedTaskListId.value = taskList.key.split('-')[1];
 
+  createTaskForm.task_type_id = task_types.find(task_type => task_type.type_name == 'Task').id;
   createTaskForm.parent_id = parent_id;
 }
 
@@ -313,6 +326,7 @@ function createTask() {
   appendIfNotNull(createTaskFormData, 'priority', createTaskForm.priority);
   appendIfNotNull(createTaskFormData, 'start_date', createTaskForm.start_date);
   appendIfNotNull(createTaskFormData, 'due_date', createTaskForm.due_date);
+  appendIfNotNull(createTaskFormData, 'task_type_id', createTaskForm.task_type_id);
   appendIfNotNull(createTaskFormData, 'tags', JSON.stringify(createTaskForm.tags));
   appendIfNotNull(createTaskFormData, 'checklists', JSON.stringify(createTaskForm.checklists));
 
@@ -333,6 +347,7 @@ function createTask() {
         createTaskForm.start_date = null;
         createTaskForm.due_date = null;
         createTaskForm.tags = [];
+        createTaskForm.task_type_id = null;
         createTaskForm.attachments = [];
         createTaskForm.checklists = [];
 
@@ -488,6 +503,7 @@ let editTaskForm = reactive({
   priority: null,
   start_date: null,
   due_date: null,
+  task_type_id: null,
   tags: [],
   attachments: [],
   new_attachments: [],
@@ -510,6 +526,7 @@ function openEditTaskDialog(task_id) {
     editTaskForm.tags = response.data.tags;
     editTaskForm.attachments = response.data.attachments;
     editTaskForm.taskComments = response.data.taskComments;
+    editTaskForm.task_type_id = response.data.task_type_id;
     editTaskForm.checklists = response.data.checklists?.map(function(checklist) {
       checklist.temp_unique_id = checklist.id;
 
@@ -534,6 +551,7 @@ function editTask() {
   appendIfNotNull(editTaskFormData, 'priority', editTaskForm.priority);
   appendIfNotNull(editTaskFormData, 'start_date', editTaskForm.start_date);
   appendIfNotNull(editTaskFormData, 'due_date', editTaskForm.due_date);
+  appendIfNotNull(editTaskFormData, 'task_type_id', editTaskForm.task_type_id);
   appendIfNotNull(editTaskFormData, 'tags', JSON.stringify(editTaskForm.tags));
   appendIfNotNull(editTaskFormData, 'attachments', JSON.stringify(editTaskForm.attachments));
   appendIfNotNull(editTaskFormData, 'checklists', JSON.stringify(editTaskForm.checklists));
@@ -560,6 +578,7 @@ function editTask() {
         editTaskForm.attachments = [];
         editTaskForm.new_attachments = [];
         editTaskForm.checklists = [];
+        editTaskForm.task_type_id = null;
 
         toast.add({severity: 'success', summary: 'Success', detail: 'Task changed', life: 3000});
         reloadSpaces();
@@ -594,6 +613,18 @@ function updateDueDate(updated_due_date, task)
   }).catch((error) => {
     toast.add({severity: 'error', summary: 'Error', detail: error.response.data.errors.due_date[0], life: 3000});
     task.due_date = null;
+  });
+}
+
+function updateTaskType(task_id, task_type_id)
+{
+  axios.post('http://localhost:8081/tasks/' + task_id, {
+    'update_one_field': true,
+    'task_type_id': task_type_id,
+  }, {
+    headers: {
+      'X-HTTP-Method-Override': 'PUT'
+    }
   });
 }
 
@@ -821,6 +852,10 @@ function formatTimestamp(timestamp) {
 
 function deleteComment(comment_id)
 {
+  if(confirm('Are you sure you want to delete a comment? Operation cannot be undone') === false) {
+    return;
+  }
+
   axios.delete('http://localhost:8081/task-comments/' + comment_id)
        .then((response) => {
          editTaskForm.taskComments.splice(editTaskForm.taskComments.indexOf(
@@ -869,6 +904,32 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
               <unicon name="tachometer-fast" width="20" height="20"
                       :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
               <p class="ml-2!">{{ slotProps.option.label }}</p>
+            </div>
+          </template>
+        </Select>
+
+        <p>Task Type</p>
+        <Select v-model="createTaskForm.task_type_id" :options="task_types" optionLabel="type_name" optionValue="id"
+                class="w-full md:w-56">
+          <template #value="slotProps">
+            <div v-if="slotProps.value" class="flex items-center">
+              <unicon
+                  :name="task_types.find(t => t.id === slotProps.value)?.icon_name"
+                  width="20"
+                  height="20"
+                  fill="#000"
+                  :icon-style="task_types.find(t => t.id === slotProps.value)?.icon_style"
+              />
+              <p class="ml-2!">
+                {{ task_types.find(t => t.id === slotProps.value)?.type_name }}
+              </p>
+            </div>
+          </template>
+          <template #option="slotProps">
+            <div class="flex items-center">
+              <unicon :name="slotProps.option.icon_name" width="20" height="20"
+                      fill="#000" :icon-style="slotProps.option.icon_style"></unicon>
+              <p class="ml-2!">{{ slotProps.option.type_name }}</p>
             </div>
           </template>
         </Select>
@@ -942,7 +1003,7 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
           <InputText id="edit_task_header" class="flex-auto" autocomplete="off" v-model="editTaskForm.task_header"
                      placeholder="Task name"/>
         </div>
-        <p class="text-red-500" v-if="editTaskErrors['task_header']">{{ editTaskErrors.task_header[0] }}</p>
+        <p class="text-red-500" v-if="editTaskErrors.task_header">{{ editTaskErrors.task_header[0] }}</p>
         <div class="mt-4!">
           <QuillEditor contentType="html" theme="snow" toolbar="full" placeholder="Task description" v-model:content="editTaskForm.task_content" />
         </div>
@@ -967,6 +1028,32 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
                 <unicon name="tachometer-fast" width="20" height="20"
                         :fill="Priorities.findByLabel(slotProps.option.label).color"></unicon>
                 <p class="ml-2!">{{ slotProps.option.label }}</p>
+              </div>
+            </template>
+          </Select>
+
+          <p>Task Type</p>
+          <Select v-model="editTaskForm.task_type_id" :options="task_types" optionLabel="type_name" optionValue="id"
+                  class="w-full md:w-56">
+            <template #value="slotProps">
+              <div v-if="slotProps.value" class="flex items-center">
+                <unicon
+                    :name="task_types.find(t => t.id === slotProps.value)?.icon_name"
+                    width="20"
+                    height="20"
+                    fill="#000"
+                    :icon-style="task_types.find(t => t.id === slotProps.value)?.icon_style"
+                />
+                <p class="ml-2!">
+                  {{ task_types.find(t => t.id === slotProps.value)?.type_name }}
+                </p>
+              </div>
+            </template>
+            <template #option="slotProps">
+              <div class="flex items-center">
+                <unicon :name="slotProps.option.icon_name" width="20" height="20"
+                        fill="#000" :icon-style="slotProps.option.icon_style"></unicon>
+                <p class="ml-2!">{{ slotProps.option.type_name }}</p>
               </div>
             </template>
           </Select>
@@ -1266,8 +1353,30 @@ watch(selectedTreeItem, processSelectedTreeItem, {immediate: true});
           </div>
 
           <TreeTable :value="taskList.tasks" tableStyle="min-width: 50rem">
-            <Column header="Name" expander style="" key="task.data.id">
+            <Column header="Task Type + Name" expander style="" key="task.data.id">
               <template #body="slotProps">
+                <Select v-model="slotProps.node.data.task_type_id" :options="task_types" optionLabel="type_name" optionValue="id"
+                        class="w-18" @update:modelValue="(value) => updateTaskType(slotProps.node.data.id, value)">
+                  <template #value="slotProps2">
+                    <div v-if="slotProps2.value" class="flex items-center">
+                      <unicon
+                          :name="task_types.find(t => t.id === slotProps2.value)?.icon_name"
+                          width="20"
+                          height="20"
+                          fill="#000"
+                          :icon-style="task_types.find(t => t.id === slotProps2.value)?.icon_style"
+                      />
+                    </div>
+                  </template>
+                  <template #option="slotProps">
+                    <div class="flex items-center">
+                      <unicon :name="slotProps.option.icon_name" width="20" height="20"
+                              fill="#000" :icon-style="slotProps.option.icon_style"></unicon>
+                      <p class="ml-2!">{{ slotProps.option.type_name }}</p>
+                    </div>
+                  </template>
+                </Select>
+
                 <a href="#" @click.prevent="() => openEditTaskDialog(slotProps.node.data.id)"
                    class="task_link">{{ slotProps.node.data.task_header }}</a>
               </template>
